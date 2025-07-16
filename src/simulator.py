@@ -304,60 +304,119 @@ class MonteCarloSimulator:
             print(f"   Target success rate: {target_success_rate:.1%}")
             print(f"   Simulations per portfolio: {self.num_simulations:,}")
             print(f"   Portfolio allocations to test: {len(allocations)}")
+            
+            # Estimate total time
+            total_simulations = len(allocations) * self.num_simulations * 2  # Rough estimate including age finding
+            estimated_minutes = total_simulations / 60000  # Assume ~1000 sims per second
+            if estimated_minutes > 1:
+                print(f"   Estimated total time: {estimated_minutes:.1f} minutes")
+            else:
+                print(f"   Estimated total time: {estimated_minutes * 60:.0f} seconds")
             print()
         
         # Create progress bar for overall portfolio analysis
         portfolio_progress = tqdm(
             allocations.items(),
-            desc="Analyzing portfolios",
+            desc="🎯 Analyzing portfolios",
             unit="portfolio",
             disable=not show_progress,
-            leave=True
+            leave=True,
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {postfix}]"
         )
         
-        for name, allocation in portfolio_progress:
-            portfolio_progress.set_description(f"Analyzing {name}")
+        successful_count = 0
+        
+        for portfolio_num, (name, allocation) in enumerate(portfolio_progress, 1):
+            portfolio_progress.set_description(f"🎯 Analyzing {name} ({portfolio_num}/{len(allocations)})")
             
-            # Find optimal retirement age for this allocation
-            optimal_age = self.find_optimal_retirement_age(
-                user_input, allocation, target_success_rate, show_progress=False
-            )
-            
-            if optimal_age is not None:
-                # Run full simulation for optimal age
-                result = self.run_simulation_for_retirement_age(
-                    user_input, allocation, optimal_age, show_progress=True
-                )
-                results[name] = result
+            try:
+                # Find optimal retirement age for this allocation
+                if show_progress:
+                    print(f"\n  🔍 Finding optimal retirement age for {name}...")
                 
-                # Update progress bar with result
-                portfolio_progress.set_postfix(
-                    age=optimal_age,
-                    success=f"{result.success_rate:.1%}"
+                optimal_age = self.find_optimal_retirement_age(
+                    user_input, allocation, target_success_rate, show_progress=False
                 )
-            else:
-                # Create result indicating retirement not achievable
+                
+                if optimal_age is not None:
+                    if show_progress:
+                        print(f"  ✅ Optimal age found: {optimal_age}")
+                        print(f"  🎲 Running {self.num_simulations:,} simulations...")
+                    
+                    # Run full simulation for optimal age
+                    result = self.run_simulation_for_retirement_age(
+                        user_input, allocation, optimal_age, show_progress=show_progress
+                    )
+                    results[name] = result
+                    
+                    if result.success_rate >= target_success_rate:
+                        successful_count += 1
+                        status_emoji = "✅"
+                    else:
+                        status_emoji = "⚠️"
+                    
+                    # Update progress bar with result
+                    portfolio_progress.set_postfix_str(
+                        f"{status_emoji} Age: {optimal_age}, Success: {result.success_rate:.1%}"
+                    )
+                    
+                    if show_progress:
+                        print(f"  {status_emoji} Result: {result.success_rate:.1%} success rate at age {optimal_age}")
+                    
+                else:
+                    if show_progress:
+                        print(f"  ❌ No viable retirement age found (target not achievable)")
+                    
+                    # Create result indicating retirement not achievable
+                    result = SimulationResult(
+                        portfolio_allocation=allocation,
+                        retirement_age=95,  # Max age
+                        success_rate=0.0,
+                        portfolio_values=np.zeros(6),
+                        withdrawal_amounts=np.zeros(5),
+                        final_portfolio_value=0.0
+                    )
+                    results[name] = result
+                    
+                    # Update progress bar with failure
+                    portfolio_progress.set_postfix_str("❌ Target not achievable")
+                
+            except KeyboardInterrupt:
+                if show_progress:
+                    print(f"\n⚠️  Analysis interrupted by user during {name}")
+                raise
+            except Exception as e:
+                if show_progress:
+                    print(f"\n❌ Error analyzing {name}: {str(e)}")
+                # Create a failed result
                 result = SimulationResult(
                     portfolio_allocation=allocation,
-                    retirement_age=95,  # Max age
+                    retirement_age=95,
                     success_rate=0.0,
                     portfolio_values=np.zeros(6),
                     withdrawal_amounts=np.zeros(5),
                     final_portfolio_value=0.0
                 )
                 results[name] = result
-                
-                # Update progress bar with failure
-                portfolio_progress.set_postfix(
-                    age="N/A",
-                    success="0.0%"
-                )
+                portfolio_progress.set_postfix_str("❌ Analysis failed")
         
         if show_progress:
-            print(f"\n✅ Comprehensive analysis complete!")
-            print(f"   Portfolios analyzed: {len(results)}")
-            successful_portfolios = sum(1 for r in results.values() if r.success_rate >= target_success_rate)
-            print(f"   Portfolios meeting target: {successful_portfolios}/{len(results)}")
+            print(f"\n🎉 Comprehensive analysis complete!")
+            print(f"   📊 Portfolios analyzed: {len(results)}")
+            print(f"   ✅ Portfolios meeting {target_success_rate:.0%} target: {successful_count}/{len(results)}")
+            
+            if successful_count > 0:
+                # Find the best performing portfolio
+                best_portfolio = max(
+                    [(name, result) for name, result in results.items() if result.success_rate >= target_success_rate],
+                    key=lambda x: x[1].success_rate,
+                    default=(None, None)
+                )
+                if best_portfolio[0]:
+                    print(f"   🏆 Best portfolio: {best_portfolio[0]} (Age {best_portfolio[1].retirement_age})")
+            else:
+                print(f"   ⚠️  No portfolios achieved the {target_success_rate:.0%} success rate target")
+                print(f"   💡 Consider increasing savings or reducing desired income")
             print()
         
         return results

@@ -74,14 +74,21 @@ class RetirementCalculatorCLI:
                 
                 if 18 <= age <= 80:
                     return age
+                elif age < 18:
+                    click.echo("⚠️  Age must be at least 18 for retirement planning.")
+                    click.echo("   This tool is designed for adults planning their retirement.")
+                elif age > 80:
+                    click.echo("⚠️  Age must be 80 or younger for meaningful retirement planning.")
+                    click.echo("   Consider consulting a financial advisor for immediate retirement needs.")
                 else:
-                    click.echo("Age must be between 18 and 80. Please try again.")
+                    click.echo("⚠️  Age must be between 18 and 80. Please try again.")
                     
             except click.Abort:
-                click.echo("\\nOperation cancelled.")
+                click.echo("\\n👋 Operation cancelled by user.")
                 sys.exit(0)
             except (ValueError, TypeError):
-                click.echo("Please enter a valid age (whole number).")
+                click.echo("❌ Please enter a valid age as a whole number (e.g., 35).")
+                click.echo("   Avoid letters, decimals, or special characters.")
     
     def _prompt_for_current_savings(self) -> float:
         """Prompt for current savings with validation."""
@@ -94,15 +101,24 @@ class RetirementCalculatorCLI:
                 )
                 
                 if savings >= 0:
+                    if savings == 0:
+                        click.echo("💡 Starting with no savings is fine - your monthly contributions will build your retirement fund.")
+                    elif savings > 10000000:  # 10 million
+                        click.echo("⚠️  That's a very large amount. Please double-check your entry.")
+                        if not click.confirm("Is this amount correct?"):
+                            continue
                     return savings
                 else:
-                    click.echo("Savings cannot be negative. Please try again.")
+                    click.echo("❌ Savings cannot be negative.")
+                    click.echo("   Enter 0 if you have no current savings.")
                     
             except click.Abort:
-                click.echo("\\nOperation cancelled.")
+                click.echo("\\n👋 Operation cancelled by user.")
                 sys.exit(0)
             except (ValueError, TypeError):
-                click.echo("Please enter a valid amount (e.g., 50000 or 50000.50).")
+                click.echo("❌ Please enter a valid monetary amount.")
+                click.echo("   Examples: 50000, 50000.50, 0")
+                click.echo("   Avoid commas, currency symbols, or letters.")
     
     def _prompt_for_monthly_savings(self) -> float:
         """Prompt for monthly savings with validation."""
@@ -115,15 +131,27 @@ class RetirementCalculatorCLI:
                 )
                 
                 if savings >= 0:
+                    if savings == 0:
+                        click.echo("⚠️  No monthly savings means retirement will depend entirely on current savings.")
+                        click.echo("   Consider saving even a small amount monthly for better outcomes.")
+                    elif savings < 100:
+                        click.echo("💡 Small monthly savings can still make a big difference over time!")
+                    elif savings > 50000:  # Very high monthly savings
+                        click.echo("⚠️  That's a very high monthly savings amount. Please double-check your entry.")
+                        if not click.confirm("Is this amount correct?"):
+                            continue
                     return savings
                 else:
-                    click.echo("Monthly savings cannot be negative. Please try again.")
+                    click.echo("❌ Monthly savings cannot be negative.")
+                    click.echo("   Enter 0 if you don't currently save monthly.")
                     
             except click.Abort:
-                click.echo("\\nOperation cancelled.")
+                click.echo("\\n👋 Operation cancelled by user.")
                 sys.exit(0)
             except (ValueError, TypeError):
-                click.echo("Please enter a valid amount (e.g., 1000 or 1000.50).")
+                click.echo("❌ Please enter a valid monetary amount.")
+                click.echo("   Examples: 1000, 1500.50, 0")
+                click.echo("   Avoid commas, currency symbols, or letters.")
     
     def _prompt_for_desired_income(self) -> float:
         """Prompt for desired annual retirement income with validation."""
@@ -136,15 +164,30 @@ class RetirementCalculatorCLI:
                 )
                 
                 if income > 0:
+                    if income < 10000:
+                        click.echo("⚠️  That's a very low annual income. Consider if this covers your basic needs.")
+                        click.echo("   Remember: this is after-tax income in today's purchasing power.")
+                        if not click.confirm("Is this amount realistic for your retirement lifestyle?"):
+                            continue
+                    elif income > 200000:
+                        click.echo("⚠️  That's a very high annual income. Please double-check your entry.")
+                        click.echo("   Remember: this is after-tax income in today's purchasing power.")
+                        if not click.confirm("Is this amount correct?"):
+                            continue
+                    elif 15000 <= income <= 50000:
+                        click.echo("💡 This looks like a reasonable retirement income target.")
                     return income
                 else:
-                    click.echo("Desired income must be positive. Please try again.")
+                    click.echo("❌ Desired income must be positive.")
+                    click.echo("   This represents your target annual spending in retirement.")
                     
             except click.Abort:
-                click.echo("\\nOperation cancelled.")
+                click.echo("\\n👋 Operation cancelled by user.")
                 sys.exit(0)
             except (ValueError, TypeError):
-                click.echo("Please enter a valid amount (e.g., 30000 or 30000.50).")
+                click.echo("❌ Please enter a valid monetary amount.")
+                click.echo("   Examples: 30000, 25000.50")
+                click.echo("   Avoid commas, currency symbols, or letters.")
     
     def _display_input_summary(self, user_input: UserInput):
         """Display a summary of user input for confirmation."""
