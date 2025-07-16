@@ -54,6 +54,7 @@ class SimulationResult:
     portfolio_values: np.ndarray
     withdrawal_amounts: np.ndarray
     final_portfolio_value: float
+    percentile_data: Optional[Dict[str, np.ndarray]] = None
     
     
 @dataclass

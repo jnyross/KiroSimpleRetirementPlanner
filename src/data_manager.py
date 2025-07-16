@@ -50,8 +50,9 @@ class HistoricalDataManager:
             if self.inflation_rates is None:
                 self.inflation_rates = self._load_inflation_rates()
             
-            # Convert to real returns (inflation-adjusted)
-            df['real_return'] = df['return'] - self._get_inflation_for_year(df['year'])
+            # Convert to real returns (inflation-adjusted) using proper formula
+            inflation_rates = self._get_inflation_for_year(df['year'])
+            df['real_return'] = (1 + df['return']) / (1 + inflation_rates) - 1
             return df.set_index('year')['real_return']
             
         except Exception as e:
@@ -72,8 +73,9 @@ class HistoricalDataManager:
             if self.inflation_rates is None:
                 self.inflation_rates = self._load_inflation_rates()
             
-            # Convert to real returns (inflation-adjusted)
-            df['real_return'] = df['return'] - self._get_inflation_for_year(df['year'])
+            # Convert to real returns (inflation-adjusted) using proper formula
+            inflation_rates = self._get_inflation_for_year(df['year'])
+            df['real_return'] = (1 + df['return']) / (1 + inflation_rates) - 1
             return df.set_index('year')['real_return']
             
         except Exception as e:

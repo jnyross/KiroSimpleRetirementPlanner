@@ -105,22 +105,52 @@
   - Ensure percentile data is correctly passed to chart generation
   - _Requirements: 3.5, 7.5_
 
-- [ ] 16. Enhance chart generation with real percentile data
+- [x] 16. Enhance chart generation with real percentile data
   - Update ChartGenerator to handle actual percentile trajectories from simulations
   - Fix chart generation to work with the corrected percentile data structure
   - Test chart generation with realistic simulation data
   - _Requirements: 3.5, 7.5_
 
-- [ ] 17. Create comprehensive README documentation
+- [x] 17. Create comprehensive README documentation
   - Write installation instructions for Python dependencies
   - Add usage examples with sample commands and expected output
   - Document the methodology and assumptions used in calculations
   - Include troubleshooting section for common issues
   - _Requirements: 4.4, 9.1, 9.3_
 
-- [ ] 18. Add final integration testing and validation
+- [x] 18. Add final integration testing and validation
   - Run full end-to-end tests with realistic user scenarios
   - Validate that all 6 portfolio allocations produce reasonable results
   - Test edge cases (very young/old users, extreme savings rates, etc.)
   - Verify that 99% confidence threshold is properly implemented
   - _Requirements: All requirements - final validation_
+
+## Additional Tasks Identified
+
+- [ ] 19. Improve unit test coverage and organization
+  - Move existing test files from root directory to tests/ directory
+  - Create proper pytest test structure with test classes
+  - Add comprehensive unit tests for all core components
+  - Ensure test coverage for edge cases and error conditions
+  - _Requirements: All requirements - testing ensures correctness_
+
+- [ ] 20. Enhance error handling and user experience
+  - Add better error messages for common data loading issues
+  - Improve input validation with more specific feedback
+  - Add graceful handling of missing or corrupted data files
+  - Implement better progress reporting during long simulations
+  - _Requirements: 1.4, 4.5, 9.2, 9.3_
+
+- [ ] 21. Optimize performance for large simulations
+  - Profile the Monte Carlo simulation performance
+  - Implement vectorized operations where possible
+  - Add memory management for very large simulation runs
+  - Consider parallel processing for portfolio comparisons
+  - _Requirements: 2.3, 2.4, 3.1, 3.2_
+
+- [ ] 22. Add data validation and quality checks
+  - Implement comprehensive validation of historical data files
+  - Add checks for data consistency and reasonable ranges
+  - Create data quality reports and warnings
+  - Add functionality to handle missing years in historical data
+  - _Requirements: 2.1, 2.2, 8.1, 8.3, 9.4_
