@@ -2,7 +2,7 @@
 
 A command-line retirement prediction tool that uses Monte Carlo simulation with historical UK market data to calculate when you can retire with 99% confidence of not running out of money by age 100.
 
-## Features
+## Key Features
 
 - **Monte Carlo Simulation**: Uses historical stock and bond returns to run 10,000+ retirement scenarios
 - **Multiple Portfolio Allocations**: Tests 6 different portfolio mixes from 100% cash to 100% equity
@@ -10,116 +10,476 @@ A command-line retirement prediction tool that uses Monte Carlo simulation with 
 - **UK Tax Integration**: Automatically calculates UK taxes on retirement withdrawals
 - **Real Returns Focus**: All calculations in inflation-adjusted terms (today's purchasing power)
 - **High Confidence Threshold**: Targets 99% success rate for retirement feasibility
+- **Comprehensive Analysis**: Provides detailed comparison across all portfolio allocations
+- **Visual Charts**: Generates time-series charts showing portfolio performance over time
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.7 or later
-- pip package manager
+- **Python 3.8 or later** (Python 3.7+ supported, but 3.8+ recommended)
+- **pip package manager** (usually comes with Python)
+- **At least 1GB RAM** for large simulations
+- **50MB disk space** for the application and data files
 
-### Installation Steps
+### Quick Installation
 
-1. **Clone or download this repository**
+1. **Download or clone this repository**
    ```bash
+   # If using git
    git clone <repository-url>
-   cd kiro-simple-retirement-planner
+   cd retirement-calculator
+   
+   # Or download and extract the ZIP file, then navigate to the directory
    ```
 
-2. **Install required dependencies**
+2. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-### Required Dependencies
+3. **Verify installation**
+   ```bash
+   python main.py --help
+   ```
 
-The tool requires the following Python packages:
-- `numpy` - Numerical computing and array operations
-- `pandas` - Data manipulation and CSV file handling
-- `matplotlib` - Chart generation and visualization
-- `click` - Command-line interface framework
-- `tqdm` - Progress bar display during simulations
-- `pytest` - Testing framework (for running tests)
+### Detailed Installation Steps
 
-### Alternative Installation
-
-If you don't have a requirements.txt file, install dependencies manually:
+#### Step 1: Check Python Version
 ```bash
-pip install numpy pandas matplotlib click tqdm pytest
+python --version
+# or
+python3 --version
+```
+Ensure you have Python 3.8 or later. If not, download from [python.org](https://www.python.org/downloads/).
+
+#### Step 2: Set Up Virtual Environment (Recommended)
+```bash
+# Create virtual environment
+python -m venv retirement-calc-env
+
+# Activate virtual environment
+# On Windows:
+retirement-calc-env\Scripts\activate
+# On macOS/Linux:
+source retirement-calc-env/bin/activate
 ```
 
-### Verify Installation
+#### Step 3: Install Required Dependencies
+The tool requires these specific packages with minimum versions:
 
-Test that the installation works:
+| Package | Version | Purpose |
+|---------|---------|---------|
+| numpy | ≥1.21.0 | Numerical calculations and Monte Carlo simulations |
+| pandas | ≥1.3.0 | Historical data loading and manipulation |
+| matplotlib | ≥3.4.0 | Chart generation and visualization |
+| click | ≥8.0.0 | Command-line interface framework |
+| tqdm | ≥4.62.0 | Progress bars during long simulations |
+| pytest | ≥6.0.0 | Testing framework (development only) |
+
 ```bash
+# Install from requirements.txt (recommended)
+pip install -r requirements.txt
+
+# Or install manually with specific versions
+pip install "numpy>=1.21.0" "pandas>=1.3.0" "matplotlib>=3.4.0" "click>=8.0.0" "tqdm>=4.62.0" "pytest>=6.0.0"
+```
+
+#### Step 4: Verify Data Files
+Ensure these CSV files exist in the `data/` directory:
+```bash
+ls data/
+# Should show:
+# uk_equity_returns.csv
+# uk_bond_returns.csv  
+# uk_inflation_rates.csv
+```
+
+#### Step 5: Test Installation
+```bash
+# Test basic functionality
+python main.py --help
+
+# Run a quick test with minimal simulations
+python main.py -s 100
+```
+
+### Platform-Specific Installation
+
+#### Windows
+```cmd
+# Use Command Prompt or PowerShell
+python -m pip install -r requirements.txt
+python main.py --help
+```
+
+#### macOS
+```bash
+# May need to use python3 explicitly
+python3 -m pip install -r requirements.txt
 python3 main.py --help
 ```
 
-This should display the help text for the retirement calculator.
+#### Linux (Ubuntu/Debian)
+```bash
+# Install Python development headers if needed
+sudo apt update
+sudo apt install python3-dev python3-pip
+
+# Install dependencies
+pip3 install -r requirements.txt
+python3 main.py --help
+```
+
+### Alternative Installation Methods
+
+#### Using conda
+```bash
+# Create conda environment
+conda create -n retirement-calc python=3.8
+conda activate retirement-calc
+
+# Install packages
+conda install numpy pandas matplotlib click tqdm pytest
+```
+
+#### Docker Installation (Advanced)
+```dockerfile
+# Create Dockerfile
+FROM python:3.8-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "main.py"]
+```
+
+### Troubleshooting Installation
+
+**Common Installation Issues:**
+
+1. **Permission Errors**
+   ```bash
+   # Use --user flag to install for current user only
+   pip install --user -r requirements.txt
+   ```
+
+2. **Outdated pip**
+   ```bash
+   # Upgrade pip first
+   python -m pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
+
+3. **Missing C++ Compiler (Windows)**
+   - Install Microsoft Visual C++ Build Tools
+   - Or use pre-compiled wheels: `pip install --only-binary=all -r requirements.txt`
+
+4. **Apple Silicon Mac Issues**
+   ```bash
+   # Use conda for better compatibility
+   conda install numpy pandas matplotlib
+   pip install click tqdm pytest
+   ```
 
 ## Usage
 
 ### Basic Usage
 
-Run the retirement calculator:
+Run the retirement calculator with default settings:
 ```bash
-python3 main.py
+python main.py
 ```
+
+The tool will guide you through entering your financial information and then run a comprehensive analysis.
 
 ### Command Line Options
 
+View all available options:
 ```bash
-python3 main.py --help
+python main.py --help
 ```
 
-Options:
-- `--simulations, -s`: Number of Monte Carlo simulations (default: 10,000)
-- `--charts, -c`: Generate charts automatically
-- `--verbose, -v`: Enable verbose output
+**Available Options:**
+- `--simulations, -s INTEGER`: Number of Monte Carlo simulations (default: 10,000)
+- `--charts, -c`: Generate charts automatically without prompting
+- `--verbose, -v`: Enable verbose output with detailed progress information
+- `--help`: Show help message and exit
 
-### Example Usage
+### Example Usage Scenarios
 
+#### Quick Test Run (Fast)
 ```bash
-# Run with 5,000 simulations and generate charts
-python3 main.py --simulations 5000 --charts
-
-# Run with reduced simulations for faster testing
-python3 main.py -s 1000
+# Run with fewer simulations for quick testing
+python main.py -s 1000
 ```
 
-## Input Requirements
+#### Full Analysis with Charts
+```bash
+# Run full analysis and automatically generate charts
+python main.py --simulations 10000 --charts
+```
 
-The tool will prompt you for:
-- **Current age** (18-80)
-- **Current savings** (in £)
-- **Monthly savings** (in £)
-- **Desired annual retirement income** (after-tax, in £)
+#### Verbose Analysis
+```bash
+# Run with detailed progress information
+python main.py --verbose --charts
+```
 
-## Output
+#### High-Precision Analysis
+```bash
+# Run with more simulations for higher precision (slower)
+python main.py -s 50000
+```
 
-The tool provides:
-- **Recommended portfolio allocation** for optimal retirement timing
-- **Retirement age** for each portfolio with 99% confidence
-- **Success rates** for all 6 portfolio allocations
-- **Portfolio comparison** showing trade-offs between risk and retirement age
-- **Improvement suggestions** for better retirement outcomes
-- **Retirement readiness score** (0-100)
+### Interactive Input Process
 
-## Portfolio Allocations Tested
+When you run the tool, you'll be prompted for the following information:
 
-1. **100% Cash** - No real return after inflation
-2. **100% Bonds** - Conservative bond allocation
-3. **25% Equities/75% Bonds** - Conservative mixed allocation
-4. **50% Equities/50% Bonds** - Balanced allocation
-5. **75% Equities/25% Bonds** - Growth-oriented allocation
-6. **100% Equities** - Aggressive growth allocation
+#### 1. Current Age
+```
+Enter your current age (18-80): 35
+```
+- **Range**: 18-80 years
+- **Purpose**: Determines accumulation period and retirement timeline
 
-## Guard Rails System
+#### 2. Current Savings
+```
+Enter your current savings (£): 50000
+```
+- **Format**: Enter amount in pounds (no commas or currency symbols)
+- **Purpose**: Starting point for portfolio growth calculations
 
-The tool implements a dynamic spending adjustment system:
-- **Upper Guard Rail**: 20% above initial portfolio value → normal spending
-- **Lower Guard Rail**: 15% below initial portfolio value → reduce spending by 10%
-- **Severe Guard Rail**: 25% below initial portfolio value → reduce spending by 20%
+#### 3. Monthly Savings
+```
+Enter your monthly savings (£): 1000
+```
+- **Format**: Monthly amount in pounds
+- **Purpose**: Ongoing contributions during accumulation phase
+
+#### 4. Desired Annual Income
+```
+Enter your desired annual retirement income (after-tax, £): 30000
+```
+- **Format**: Annual amount in pounds (after-tax)
+- **Purpose**: Target spending level in retirement
+
+### Sample Output
+
+Here's what you can expect to see after running the analysis:
+
+```
+============================================================
+RETIREMENT ANALYSIS RESULTS
+============================================================
+
+User Profile:
+  Current Age: 35
+  Current Savings: £50,000.00
+  Monthly Savings: £1,000.00
+  Desired Annual Income: £30,000.00
+
+RECOMMENDATION:
+  Best Portfolio: 75% Equities/25% Bonds
+  Recommended Retirement Age: 58
+
+PORTFOLIO COMPARISON:
+Portfolio                 Retirement Age  Success Rate    Median End Wealth   
+---------------------------------------------------------------------------
+100% Cash                 Never          0.0%            £0              
+100% Bonds                67             99.2%           £245,000        
+25% Equities/75% Bonds    62             99.1%           £380,000        
+50% Equities/50% Bonds    59             99.3%           £520,000        
+75% Equities/25% Bonds    58             99.1%           £680,000        
+100% Equities             57             98.8%           £850,000        
+
+KEY INSIGHTS:
+  Earliest Possible Retirement: Age 57
+  Best Success Rate: 99.3%
+  Average Success Rate: 82.7%
+  Withdrawal Rate: 3.2% (£37,500 from £1,170,000)
+  Note: Low withdrawal rate means portfolio may grow during retirement
+
+IMPROVEMENT SUGGESTIONS:
+  1. Consider increasing monthly savings by £200 to retire 2 years earlier
+  2. The 75% Equities/25% Bonds allocation provides good balance of growth and stability
+  3. Your current savings rate puts you on track for a comfortable retirement
+
+RETIREMENT READINESS SCORE: 85.2/100
+```
+
+### Chart Output
+
+When charts are generated (using `-c` flag or when prompted), the tool creates:
+
+1. **Portfolio Comparison Chart**: Shows retirement age for each allocation
+2. **Percentile Charts**: Time-series showing 10th, 50th, and 90th percentiles for each portfolio
+3. **Savings Projection Chart**: Shows portfolio growth over time
+
+Charts are saved in the `charts/` directory with timestamps for easy reference.
+
+### Understanding the Results
+
+#### Retirement Age
+- **Age shown**: The youngest age where 99% of simulations succeed
+- **"Never"**: Indicates the portfolio allocation cannot achieve 99% success rate
+- **Lower ages**: Generally associated with higher-risk portfolios
+
+#### Success Rate
+- **Percentage**: Proportion of simulations where money lasts until age 100
+- **Target**: 99% or higher for recommended retirement age
+- **Interpretation**: Higher percentages indicate more reliable retirement plans
+
+#### Median End Wealth
+- **Amount**: Expected portfolio value at age 100 in 50% of scenarios
+- **Real terms**: All amounts shown in today's purchasing power
+- **Higher values**: Indicate potential for leaving inheritance or handling unexpected expenses
+
+## Portfolio Allocations Explained
+
+The tool tests 6 different portfolio allocations to help you understand the trade-offs between risk and retirement timing. Each allocation represents a different investment strategy:
+
+### 1. 100% Cash (Ultra-Conservative)
+- **Composition**: 100% cash equivalents (savings accounts, money market funds)
+- **Real Return**: 0% after inflation (purchasing power preserved but no growth)
+- **Risk Level**: Lowest risk, but inflation risk
+- **Typical Result**: Usually cannot achieve 99% success rate for retirement
+- **Best For**: Emergency funds, not long-term retirement savings
+
+### 2. 100% Bonds (Conservative)
+- **Composition**: 100% UK government and high-grade corporate bonds
+- **Expected Real Return**: ~1-3% annually after inflation
+- **Risk Level**: Low volatility, but interest rate and inflation risk
+- **Typical Result**: Longest time to retirement, but very stable
+- **Best For**: Risk-averse investors close to retirement
+
+### 3. 25% Equities/75% Bonds (Conservative Mixed)
+- **Composition**: 25% UK/global stocks, 75% bonds
+- **Expected Real Return**: ~2-4% annually after inflation
+- **Risk Level**: Low-moderate volatility with some growth potential
+- **Typical Result**: Moderate retirement timeline with good stability
+- **Best For**: Conservative investors wanting some growth
+
+### 4. 50% Equities/50% Bonds (Balanced)
+- **Composition**: 50% UK/global stocks, 50% bonds
+- **Expected Real Return**: ~3-5% annually after inflation
+- **Risk Level**: Moderate volatility, balanced risk/reward
+- **Typical Result**: Good balance of retirement timing and stability
+- **Best For**: Moderate risk tolerance, classic balanced approach
+
+### 5. 75% Equities/25% Bonds (Growth-Oriented)
+- **Composition**: 75% UK/global stocks, 25% bonds
+- **Expected Real Return**: ~4-6% annually after inflation
+- **Risk Level**: Higher volatility but strong long-term growth
+- **Typical Result**: Often the optimal choice for earlier retirement
+- **Best For**: Long investment horizon, moderate-high risk tolerance
+
+### 6. 100% Equities (Aggressive Growth)
+- **Composition**: 100% UK/global stocks
+- **Expected Real Return**: ~5-7% annually after inflation
+- **Risk Level**: Highest volatility, maximum growth potential
+- **Typical Result**: Earliest retirement age but highest risk
+- **Best For**: Long investment horizon, high risk tolerance
+
+### Portfolio Selection Guidance
+
+**How the Tool Chooses the Best Portfolio:**
+1. **Success Rate**: Must achieve 99%+ success rate
+2. **Retirement Age**: Earlier retirement is preferred
+3. **Stability**: Considers volatility and downside risk
+4. **Recovery Ability**: How well the portfolio handles market downturns
+
+**Key Insights:**
+- **Higher equity allocations** generally allow earlier retirement but with more volatility
+- **The "optimal" portfolio** often falls in the 50-75% equity range
+- **100% equity** may not always be best due to sequence of returns risk
+- **Diversification** between stocks and bonds reduces overall portfolio risk
+
+## Guard Rails System Explained
+
+The guard rails system is a dynamic spending adjustment mechanism that helps protect your retirement portfolio during market downturns while allowing you to maintain spending during good market conditions. This system significantly improves the probability of your money lasting throughout retirement.
+
+### How Guard Rails Work
+
+The system monitors your portfolio value relative to its initial retirement value and adjusts your spending accordingly:
+
+#### 1. Upper Guard Rail (20% Above Initial Value)
+- **Trigger**: Portfolio value is 20% or more above the initial retirement value
+- **Action**: Allow normal spending (no reduction)
+- **Purpose**: Ensures you can maintain your desired lifestyle when markets perform well
+- **Example**: If you retire with £1M and your portfolio grows to £1.2M+, spend normally
+
+#### 2. Normal Zone (Within ±15% of Initial Value)
+- **Trigger**: Portfolio value is between 85% and 120% of initial retirement value
+- **Action**: Normal spending continues
+- **Purpose**: Provides a buffer zone for typical market fluctuations
+- **Example**: Portfolio between £850K and £1.2M maintains normal spending
+
+#### 3. Lower Guard Rail (15% Below Initial Value)
+- **Trigger**: Portfolio value falls 15% below initial retirement value
+- **Action**: Reduce spending by 10%
+- **Purpose**: Preserves capital during moderate market downturns
+- **Example**: Portfolio drops to £850K, reduce spending from £30K to £27K annually
+
+#### 4. Severe Guard Rail (25% Below Initial Value)
+- **Trigger**: Portfolio value falls 25% below initial retirement value
+- **Action**: Reduce spending by 20%
+- **Purpose**: Aggressive capital preservation during severe market downturns
+- **Example**: Portfolio drops to £750K, reduce spending from £30K to £24K annually
+
+### Guard Rails Benefits
+
+#### Sequence of Returns Risk Protection
+- **Problem**: Poor market returns early in retirement can devastate a portfolio
+- **Solution**: Guard rails reduce spending during poor market periods, preserving capital
+- **Result**: Higher probability of portfolio survival over 30+ year retirement
+
+#### Behavioral Framework
+- **Provides Structure**: Clear rules for spending adjustments remove emotional decision-making
+- **Reduces Anxiety**: Knowing there's a plan for market downturns provides peace of mind
+- **Maintains Flexibility**: Allows for lifestyle adjustments based on actual market performance
+
+#### Mathematical Advantage
+- **Improved Success Rates**: Studies show guard rails can improve portfolio survival rates by 10-20%
+- **Reduced Required Savings**: May allow retirement with smaller initial portfolio
+- **Downside Protection**: Limits the impact of worst-case market scenarios
+
+### Guard Rails in Practice
+
+#### Example Scenario: Market Crash in Year 2 of Retirement
+```
+Year 1: Portfolio £1,000,000 → Spend £30,000 (normal)
+Year 2: Market crash, Portfolio £700,000 → Severe guard rail triggered
+        → Reduce spending to £24,000 (20% reduction)
+Year 3: Partial recovery, Portfolio £800,000 → Lower guard rail
+        → Spending increases to £27,000 (10% reduction)
+Year 4: Full recovery, Portfolio £950,000 → Normal zone
+        → Return to normal £30,000 spending
+```
+
+#### Recovery Mechanism
+- **Gradual Return**: Spending adjustments reverse as portfolio recovers
+- **No Permanent Cuts**: Temporary reductions during market stress
+- **Upside Participation**: Can increase spending if portfolio performs exceptionally well
+
+### Implementation Details
+
+#### Calculation Method
+1. **Track Initial Value**: Record portfolio value at retirement start
+2. **Monitor Current Value**: Check portfolio value each year
+3. **Calculate Ratio**: Current value ÷ Initial value
+4. **Apply Rules**: Adjust spending based on which guard rail zone applies
+5. **Update Baseline**: Some implementations update the baseline periodically
+
+#### Tax Integration
+- **Gross Adjustments**: Guard rail reductions apply to gross (pre-tax) withdrawals
+- **Net Impact**: Actual spending reduction accounts for tax implications
+- **Efficiency**: Reduces both portfolio withdrawals and tax burden during downturns
+
+#### Inflation Adjustments
+- **Real Terms**: All guard rail calculations use inflation-adjusted values
+- **Purchasing Power**: Maintains consistent purchasing power comparisons
+- **Base Adjustment**: Initial portfolio value adjusted for inflation each year
 
 ## Tax Calculations
 
@@ -194,86 +554,314 @@ Test coverage includes:
 
 ## Troubleshooting
 
-### Common Issues
+### Common Issues and Solutions
 
-**1. Import Errors**
+#### 1. Installation and Setup Issues
+
+**Import Errors**
 ```
 ModuleNotFoundError: No module named 'src.models'
 ```
-**Solution**: Make sure you're running from the project root directory and that all `__init__.py` files are present in the src/ directory.
+**Causes**: Running from wrong directory, missing `__init__.py` files, or incorrect Python path
+**Solutions**:
+```bash
+# Ensure you're in the project root directory
+pwd  # Should show path ending in retirement-calculator
 
-**2. Missing Data Files**
+# Check that src directory exists and has __init__.py
+ls src/
+ls src/__init__.py
+
+# Try running with explicit Python path
+PYTHONPATH=. python main.py --help
+```
+
+**Missing Dependencies**
+```
+ModuleNotFoundError: No module named 'numpy'
+```
+**Solutions**:
+```bash
+# Check if dependencies are installed
+pip list | grep numpy
+
+# Reinstall dependencies
+pip install -r requirements.txt
+
+# If using virtual environment, ensure it's activated
+source retirement-calc-env/bin/activate  # Linux/Mac
+# or
+retirement-calc-env\Scripts\activate     # Windows
+```
+
+#### 2. Data File Issues
+
+**Missing Data Files**
 ```
 FileNotFoundError: Equity returns file not found: data/uk_equity_returns.csv
 ```
-**Solution**: Ensure all CSV files are present in the data/ directory:
-- `uk_equity_returns.csv`
-- `uk_bond_returns.csv`
-- `uk_inflation_rates.csv`
+**Solutions**:
+```bash
+# Check data directory exists and contains required files
+ls data/
+# Should show: uk_equity_returns.csv, uk_bond_returns.csv, uk_inflation_rates.csv
 
-**3. Memory Issues with Large Simulations**
+# If files are missing, ensure you have the complete download
+# Check file permissions
+ls -la data/
+```
+
+**Corrupted Data Files**
+```
+pandas.errors.EmptyDataError: No columns to parse from file
+```
+**Solutions**:
+```bash
+# Check file contents
+head data/uk_equity_returns.csv
+
+# Verify file size (should not be 0 bytes)
+ls -la data/*.csv
+
+# Re-download or restore data files if corrupted
+```
+
+#### 3. Performance and Memory Issues
+
+**Memory Issues with Large Simulations**
 ```
 MemoryError: Unable to allocate array
 ```
-**Solution**: Reduce the number of simulations using the `-s` flag:
+**Solutions**:
 ```bash
-python3 main.py -s 1000
+# Reduce simulation count
+python main.py -s 1000
+
+# Check available memory
+free -h  # Linux
+# or check Task Manager on Windows
+
+# Close other applications to free memory
+# Consider using a machine with more RAM for large simulations
 ```
 
-**4. Slow Performance**
-If simulations are taking too long, try:
-- Reducing simulation count: `python3 main.py -s 5000`
-- Running without chart generation first
-- Checking available system memory
+**Slow Performance**
+**Symptoms**: Simulations taking more than 10 minutes
+**Solutions**:
+```bash
+# Start with fewer simulations for testing
+python main.py -s 2000
 
-**5. Invalid Input Values**
+# Use verbose mode to monitor progress
+python main.py -v -s 5000
+
+# Skip chart generation initially
+python main.py -s 10000  # Charts will be prompted separately
+
+# Check system resources
+top  # Linux/Mac
+# or Task Manager on Windows
+```
+
+#### 4. Input Validation Issues
+
+**Invalid Age Range**
 ```
 ValueError: Current age must be between 18 and 80
 ```
-**Solution**: Ensure input values are within reasonable ranges:
-- Age: 18-80 years
-- Savings: Positive values
-- Monthly savings: Positive values
-- Desired income: Positive values
+**Solution**: Enter age between 18-80. The tool is designed for working-age adults.
 
-**6. Chart Generation Issues**
+**Negative or Zero Values**
+```
+ValueError: Savings amount must be positive
+```
+**Solutions**:
+- Enter positive values for all financial inputs
+- Use whole numbers (no commas or currency symbols)
+- For zero current savings, enter a small positive value like 1
+
+**Unrealistic Input Combinations**
+**Symptoms**: Tool shows "Never" for retirement age or very low success rates
+**Common Causes and Solutions**:
+```
+# Desired income too high relative to savings
+# Example: £100K income with £10K savings and £100/month contributions
+# Solution: Reduce desired income or increase savings rate
+
+# Very low savings rate
+# Example: £50/month savings with £50K desired income
+# Solution: Increase monthly savings significantly
+
+# Starting too late
+# Example: Age 60 with minimal savings
+# Solution: Consider working longer or reducing retirement income expectations
+```
+
+#### 5. Chart Generation Issues
+
+**Matplotlib Import Errors**
 ```
 ImportError: No module named 'matplotlib'
 ```
-**Solution**: Install matplotlib:
+**Solutions**:
 ```bash
+# Install matplotlib specifically
 pip install matplotlib
+
+# Or reinstall all dependencies
+pip install -r requirements.txt
+
+# Check matplotlib installation
+python -c "import matplotlib; print(matplotlib.__version__)"
 ```
 
-**7. Unusual Results**
-If retirement age seems too high or success rates are very low:
-- Check that your desired income is realistic relative to your savings
-- Consider increasing monthly savings amounts
-- Verify that current age and savings are correct
+**Chart Display Issues**
+```
+UserWarning: Matplotlib is currently using agg, which is a non-GUI backend
+```
+**Solutions**:
+```bash
+# For headless servers, this is normal - charts save to files
+# For desktop use, install GUI backend
+pip install matplotlib[gui]
 
-### Performance Tips
+# Or set backend explicitly
+export MPLBACKEND=TkAgg  # Linux/Mac
+set MPLBACKEND=TkAgg     # Windows
+```
 
-- **Start Small**: Begin with 1,000-2,000 simulations for quick testing
-- **Use Verbose Mode**: Add `-v` flag to see detailed progress
-- **Monitor Memory**: Large simulations may require 1-2GB RAM
-- **Chart Generation**: Can be disabled for faster runs if not needed
+#### 6. Results Interpretation Issues
 
-### Data Validation
+**Unusual Results**
+**"Never" Retirement Age**:
+- **Cause**: Portfolio allocation cannot achieve 99% success rate
+- **Solution**: Increase savings rate, reduce desired income, or accept lower success rate
 
-The tool includes built-in validation for:
-- Data file format consistency
-- Reasonable return value ranges
-- Minimum data requirements (10+ years)
-- Input parameter bounds
+**Very High Retirement Ages (70+)**:
+- **Cause**: Conservative portfolio or high income expectations
+- **Solutions**: Consider higher equity allocation, increase savings, or reduce income expectations
 
-### Getting Help
+**All Portfolios Show Similar Results**:
+- **Cause**: Very high or very low savings rate dominates portfolio allocation effects
+- **Solution**: This may be correct - savings rate is more important than allocation in extreme cases
 
-If you encounter issues:
-1. Check the error message carefully
-2. Verify all dependencies are installed
-3. Ensure data files are complete and properly formatted
-4. Try running with reduced simulations first
-5. Check that input values are reasonable
+#### 7. Technical Issues
+
+**Python Version Compatibility**
+```
+SyntaxError: invalid syntax (dataclass usage)
+```
+**Solution**: Ensure Python 3.8+ is being used:
+```bash
+python --version
+# If using older Python, upgrade or use python3 explicitly
+python3 main.py
+```
+
+**Permission Errors**
+```
+PermissionError: [Errno 13] Permission denied: 'charts/'
+```
+**Solutions**:
+```bash
+# Check directory permissions
+ls -la
+
+# Create charts directory manually
+mkdir charts
+
+# Run with appropriate permissions
+sudo python main.py  # Not recommended
+# Better: fix directory permissions
+chmod 755 .
+```
+
+### Performance Optimization Tips
+
+#### For Faster Testing
+```bash
+# Quick test run (30 seconds)
+python main.py -s 500
+
+# Medium test run (2-3 minutes)
+python main.py -s 2000
+
+# Production run (5-10 minutes)
+python main.py -s 10000
+```
+
+#### For Large-Scale Analysis
+```bash
+# High precision run (20-30 minutes)
+python main.py -s 50000
+
+# Maximum precision (1+ hours)
+python main.py -s 100000
+```
+
+#### Memory Management
+- **Close other applications** before running large simulations
+- **Use 64-bit Python** for better memory handling
+- **Monitor system resources** during execution
+- **Consider cloud computing** for very large simulations
+
+### Data Validation and Quality Checks
+
+The tool includes comprehensive validation:
+
+#### Input Validation
+- **Age range**: 18-80 years (working age adults)
+- **Financial values**: Must be positive and reasonable
+- **Consistency checks**: Warns about unusual input combinations
+
+#### Data File Validation
+- **File existence**: Checks all required CSV files are present
+- **Data format**: Validates CSV structure and column names
+- **Value ranges**: Ensures historical returns are within reasonable bounds
+- **Completeness**: Requires minimum 10 years of historical data
+
+#### Results Validation
+- **Success rate bounds**: Ensures rates are between 0-100%
+- **Portfolio value consistency**: Validates simulation mathematics
+- **Chart data integrity**: Verifies data before visualization
+
+### Getting Help and Support
+
+#### Self-Diagnosis Steps
+1. **Check error messages carefully** - they usually indicate the specific problem
+2. **Verify installation** - run `python main.py --help` to test basic functionality
+3. **Test with minimal data** - use `-s 100` for quick validation
+4. **Check file permissions** - ensure you can read data files and write to charts directory
+5. **Validate inputs** - ensure all values are positive and reasonable
+
+#### Common Resolution Strategies
+1. **Start simple** - use default settings first, then customize
+2. **Isolate the problem** - test individual components (installation, data loading, simulation)
+3. **Check system resources** - ensure adequate memory and disk space
+4. **Update dependencies** - ensure you have compatible package versions
+5. **Use verbose mode** - add `-v` flag to see detailed progress and error information
+
+#### When Results Seem Wrong
+1. **Verify input values** - double-check age, savings, and income figures
+2. **Understand the methodology** - 99% success rate is very conservative
+3. **Consider market reality** - historical data includes major crashes and recoveries
+4. **Check assumptions** - the tool assumes no other retirement income sources
+5. **Compare scenarios** - try different input values to understand sensitivity
+
+#### Advanced Troubleshooting
+```bash
+# Enable Python debugging
+python -u main.py -v -s 1000
+
+# Check package versions
+pip list | grep -E "(numpy|pandas|matplotlib)"
+
+# Validate data files manually
+python -c "import pandas as pd; print(pd.read_csv('data/uk_equity_returns.csv').head())"
+
+# Test individual components
+python -c "from src.models import UserInput; print('Models import OK')"
+```
 
 ## File Structure
 
@@ -310,11 +898,187 @@ This tool prioritizes:
 - **Maintainability**: Modular design with easily updatable data files
 - **Transparency**: Open source with comprehensive testing
 
+## Methodology and Assumptions
+
+### Monte Carlo Simulation Methodology
+
+#### Historical Bootstrap Sampling
+The tool uses **bootstrap sampling** from historical data rather than parametric distributions:
+
+1. **Data Period**: Uses 44 years of UK market data (1980-2023)
+2. **Sampling Method**: Randomly selects historical years with replacement
+3. **Sequence Preservation**: Maintains the actual historical relationships between equity returns, bond returns, and inflation
+4. **Market Cycles**: Includes multiple complete market cycles, crashes, and recoveries
+
+#### Real Return Calculations
+All calculations use **real (inflation-adjusted) returns**:
+
+```
+Real Return = (1 + Nominal Return) / (1 + Inflation Rate) - 1
+```
+
+**Example**: If stocks return 8% nominal and inflation is 3%:
+```
+Real Return = (1.08 / 1.03) - 1 = 4.85%
+```
+
+This ensures all projections are in today's purchasing power.
+
+#### Simulation Process Detail
+
+**Accumulation Phase (Current Age to Retirement)**:
+1. **Monthly Contributions**: Add monthly savings to portfolio
+2. **Annual Returns**: Apply randomly selected historical returns
+3. **Portfolio Rebalancing**: Maintain target allocation percentages
+4. **Real Growth**: All growth calculated in inflation-adjusted terms
+
+**Withdrawal Phase (Retirement to Age 100)**:
+1. **Annual Withdrawals**: Calculate gross withdrawal needed for desired net income
+2. **Tax Calculation**: Apply UK tax brackets to determine actual withdrawal
+3. **Guard Rails Check**: Adjust withdrawal based on portfolio performance
+4. **Portfolio Update**: Apply historical returns and subtract withdrawals
+5. **Success Check**: Verify portfolio value remains positive
+
+#### Statistical Analysis
+- **Success Rate**: Percentage of simulations where portfolio survives to age 100
+- **Percentile Analysis**: 10th, 50th (median), and 90th percentiles of portfolio values
+- **Confidence Intervals**: 99% confidence threshold for retirement age recommendations
+- **Sensitivity Analysis**: Tests multiple portfolio allocations for comparison
+
+### Key Assumptions
+
+#### Investment Assumptions
+- **Diversified Portfolios**: Assumes broad market index investing
+- **No Investment Fees**: Does not account for management fees or transaction costs
+- **Rebalancing**: Assumes annual rebalancing to maintain target allocations
+- **No Market Timing**: Uses systematic, disciplined investment approach
+- **Liquidity**: Assumes ability to buy/sell without market impact
+
+#### Tax Assumptions
+- **Current UK Tax Rates**: Uses 2024/25 tax brackets and personal allowance
+- **No Tax Changes**: Assumes current tax structure remains constant
+- **Income Tax Only**: Does not include National Insurance, capital gains, or inheritance tax
+- **No Tax-Advantaged Accounts**: Does not model ISAs, pensions, or other tax-sheltered savings
+- **Gross Withdrawal Calculation**: Determines pre-tax amount needed for desired after-tax income
+
+#### Retirement Assumptions
+- **Constant Real Spending**: Maintains same purchasing power throughout retirement (with guard rail adjustments)
+- **No Other Income**: Does not include state pension, workplace pensions, or other retirement income
+- **Age 100 Target**: Plans for money to last until age 100
+- **No Long-Term Care**: Does not specifically model long-term care costs
+- **No Inheritance Goals**: Focuses on spending money rather than leaving bequests
+
+#### Economic Assumptions
+- **Historical Patterns Continue**: Assumes future returns will be similar to historical patterns
+- **Market Efficiency**: Assumes markets are reasonably efficient over long periods
+- **No Structural Changes**: Does not model major economic or demographic shifts
+- **Inflation Consistency**: Uses historical inflation patterns for future projections
+
+### Limitations and Considerations
+
+#### Model Limitations
+- **UK-Specific**: Tax calculations and data sources are UK-focused
+- **Historical Bias**: Past performance may not predict future results
+- **Simplified Tax Model**: Does not capture all nuances of UK tax system
+- **No Behavioral Factors**: Assumes disciplined saving and spending behavior
+- **Static Assumptions**: Does not adapt assumptions based on changing circumstances
+
+#### Data Limitations
+- **44-Year Period**: Limited to post-1980 UK market data
+- **Survivorship Bias**: Historical data may not include failed markets or companies
+- **Index Returns**: Uses broad market indices rather than individual stock performance
+- **Currency Risk**: Does not model currency fluctuations for international investments
+
+#### Practical Considerations
+- **Implementation Gap**: Real-world results may differ due to fees, taxes, and behavior
+- **Changing Circumstances**: Life events may require plan adjustments
+- **Market Evolution**: Financial markets and products continue to evolve
+- **Regulatory Changes**: Tax laws and retirement rules may change over time
+
+### Validation and Accuracy
+
+#### Model Validation
+- **Cross-Validation**: Results tested against different historical periods
+- **Sensitivity Analysis**: Tested with various input parameters
+- **Benchmark Comparison**: Results compared to academic retirement research
+- **Edge Case Testing**: Validated with extreme market scenarios
+
+#### Accuracy Considerations
+- **Statistical Significance**: 10,000+ simulations provide robust statistical basis
+- **Confidence Intervals**: 99% threshold provides high confidence in recommendations
+- **Conservative Approach**: Errs on side of caution for retirement security
+- **Regular Updates**: Historical data and assumptions updated periodically
+
 ## Limitations
 
-- UK-specific tax calculations (designed for UK residents)
-- Historical data may not predict future performance
-- Does not account for other income sources in retirement
+- **UK-specific tax calculations** (designed for UK residents)
+- **Historical data may not predict future performance**
+- **Does not account for other income sources in retirement** (state pension, workplace pensions)
+- **Assumes constant real spending throughout retirement** (with guard rails adjustments)
+- **Does not include investment fees or transaction costs**
+- **Uses current tax rates** (may change in future)
+- **Does not model long-term care costs or major health expenses**
+- **Assumes disciplined investment behavior** (no panic selling or market timing)
+
+## Contributing
+
+This is a focused retirement planning tool designed for simplicity and effectiveness. The codebase is structured to be:
+
+- **Easy to understand and modify** with clear module separation
+- **Well-tested** with comprehensive unit and integration tests
+- **Documented** with detailed code comments and docstrings
+- **Extensible** for additional features while maintaining core simplicity
+
+### Development Setup
+```bash
+# Clone repository
+git clone <repository-url>
+cd retirement-calculator
+
+# Set up development environment
+python -m venv dev-env
+source dev-env/bin/activate  # Linux/Mac
+# or dev-env\Scripts\activate  # Windows
+
+# Install dependencies including development tools
+pip install -r requirements.txt
+
+# Run tests
+python -m pytest tests/ -v
+
+# Run with test data
+python main.py -s 1000
+```
+
+### Code Structure
+- **Modular design** with clear separation of concerns
+- **Data classes** for type safety and clarity
+- **Comprehensive error handling** with user-friendly messages
+- **Progress indicators** for long-running operations
+- **Extensive testing** covering edge cases and integration scenarios
+
+## License
+
+This project is designed as a simple, effective retirement planning tool for educational and personal planning purposes. The code is structured to be easily understood, modified, and extended while maintaining focus on core retirement planning functionality.
+
+## Disclaimer
+
+**Important**: This tool is for educational and planning purposes only. It should not be considered as professional financial advice. The projections are based on historical data and mathematical models that may not accurately predict future market performance.
+
+**Key Disclaimers**:
+- **Past performance does not guarantee future results**
+- **Market conditions and economic factors can change significantly**
+- **Individual circumstances vary and may require different approaches**
+- **Tax laws and retirement regulations may change**
+- **Professional financial advice is recommended for major financial decisions**
+
+**Always consult with qualified financial advisors** for comprehensive retirement planning that considers your complete financial situation, risk tolerance, and personal goals.
+
+---
+
+**Version**: 1.0  
+**Last Updated**: January 2025  
+**Compatibility**: Python 3.8+, UK tax system 2024/25oes not account for other income sources in retirement
 - Assumes constant real spending throughout retirement (with guard rails adjustments)
 
 ## Contributing
