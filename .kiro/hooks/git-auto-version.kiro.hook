@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Git Auto Version",
+  "description": "Automatically creates a new git commit with version tag after any file changes in the project",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.py",
+      "**/*.md",
+      "**/*.txt",
+      "**/*.csv"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A file has been changed in the project. Please use git to create a new commit with an appropriate commit message describing the changes, then create a new version tag. First check git status to see what files have changed, then add all changes, commit with a descriptive message, and create a version tag following semantic versioning (e.g., v1.0.1, v1.0.2, etc.)."
+  }
+}

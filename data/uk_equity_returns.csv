@@ -1,0 +1,4 @@
+year,real_return
+# Historical UK equity returns in real (inflation-adjusted) terms
+# Data will be populated in a later task
+# Format: year,real_return (as decimal, e.g., 0.05 for 5%)
