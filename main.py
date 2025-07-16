@@ -18,7 +18,7 @@ from src.data_manager import HistoricalDataManager
 from src.portfolio_manager import PortfolioManager
 from src.tax_calculator import UKTaxCalculator
 from src.guard_rails import GuardRailsEngine
-from src.simulator import MonteCarloSimulator
+from src.simulator import create_simulator
 from src.analyzer import ResultsAnalyzer
 from src.charts import ChartGenerator
 from src.cli import RetirementCalculatorCLI
@@ -91,7 +91,8 @@ class RetirementCalculatorApp:
             self.cli.display_progress("📈 Setting up portfolio allocations...")
             try:
                 self.portfolio_manager = PortfolioManager(self.data_manager)
-                self.cli.display_success("Portfolio allocations configured (6 different strategies)")
+                num_allocations = len(self.portfolio_manager.get_all_allocations())
+                self.cli.display_success(f"Portfolio allocations configured ({num_allocations} different strategies)")
             except Exception as e:
                 self.cli.display_error(f"Failed to initialize portfolio manager: {str(e)}", is_fatal=True)
             
@@ -111,17 +112,45 @@ class RetirementCalculatorApp:
             except Exception as e:
                 self.cli.display_error(f"Failed to initialize guard rails engine: {str(e)}", is_fatal=True)
             
-            # Initialize Monte Carlo simulator
+            # Initialize Monte Carlo simulator (optimized version)
             self.cli.display_progress("🎲 Initializing Monte Carlo simulator...")
             try:
-                self.simulator = MonteCarloSimulator(
+                # Check if any allocations are dynamic
+                has_dynamic_allocations = any(
+                    allocation.is_dynamic 
+                    for allocation in self.portfolio_manager.get_all_allocations().values()
+                )
+                
+                # Use regular simulator if we have dynamic allocations
+                use_optimized = not has_dynamic_allocations
+                
+                self.simulator = create_simulator(
                     self.data_manager,
                     self.portfolio_manager,
                     self.tax_calculator,
                     self.guard_rails_engine,
-                    self.num_simulations
+                    self.num_simulations,
+                    use_optimized=use_optimized,
+                    batch_size=min(1000, self.num_simulations),
+                    use_parallel=True
                 )
-                self.cli.display_success(f"Monte Carlo simulator ready ({self.num_simulations:,} simulations per portfolio)")
+                
+                # Check if optimized simulator is being used
+                if hasattr(self.simulator, 'get_memory_usage_estimate'):
+                    memory_estimate = self.simulator.get_memory_usage_estimate()
+                    self.cli.display_success(
+                        f"Optimized Monte Carlo simulator ready ({self.num_simulations:,} simulations per portfolio)\n"
+                        f"  Estimated peak memory usage: {memory_estimate['estimated_peak_mb']:.1f} MB"
+                    )
+                else:
+                    if has_dynamic_allocations:
+                        self.cli.display_success(
+                            f"Monte Carlo simulator ready ({self.num_simulations:,} simulations per portfolio)\n"
+                            f"  Using standard simulator for dynamic allocations"
+                        )
+                    else:
+                        self.cli.display_success(f"Monte Carlo simulator ready ({self.num_simulations:,} simulations per portfolio)")
+                    
             except Exception as e:
                 self.cli.display_error(f"Failed to initialize Monte Carlo simulator: {str(e)}", is_fatal=True)
             

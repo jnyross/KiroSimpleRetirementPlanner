@@ -9,7 +9,8 @@ import os
 import pandas as pd
 import numpy as np
 from typing import Dict, Optional, Tuple
-from .models import PortfolioAllocation
+from .models import PortfolioAllocation, DynamicGlidePath
+from .data_validator import DataValidator, ValidationResult
 
 
 class HistoricalDataManager:
@@ -27,24 +28,63 @@ class HistoricalDataManager:
         self.bond_returns: Optional[pd.Series] = None
         self.inflation_rates: Optional[pd.Series] = None
         self.portfolio_allocations: Optional[Dict[str, PortfolioAllocation]] = None
+        self.validator = DataValidator(data_directory)
         
-    def load_all_data(self) -> None:
-        """Load all historical data files with enhanced error handling."""
+    def load_all_data(self, validate_quality: bool = True) -> None:
+        """
+        Load all historical data files with enhanced error handling and validation.
+        
+        Args:
+            validate_quality: Whether to perform comprehensive data quality validation
+        """
+        # First, perform comprehensive data validation if requested
+        if validate_quality:
+            validation_result = self.validator.validate_all_data_files()
+            
+            if not validation_result.is_valid:
+                # Create detailed error message with validation results
+                error_msg = "Data validation failed. Please fix the following issues:\n\n"
+                
+                if validation_result.errors:
+                    error_msg += "ERRORS:\n"
+                    for error in validation_result.errors:
+                        error_msg += f"  • {error}\n"
+                    error_msg += "\n"
+                
+                if validation_result.warnings:
+                    error_msg += "WARNINGS:\n"
+                    for warning in validation_result.warnings:
+                        error_msg += f"  • {warning}\n"
+                    error_msg += "\n"
+                
+                error_msg += "Run the data quality report for more details:\n"
+                error_msg += "  python -c \"from src.data_manager import HistoricalDataManager; "
+                error_msg += "print(HistoricalDataManager().get_data_quality_report())\""
+                
+                raise ValueError(error_msg)
+            
+            # Show warnings even if validation passed
+            if validation_result.warnings:
+                print("⚠️  Data Quality Warnings:")
+                for warning in validation_result.warnings:
+                    print(f"   • {warning}")
+                print()
+        
         errors = []
         
         # Try to load each data file, collecting errors
         try:
-            self.inflation_rates = self._load_inflation_rates()
+            self.inflation_rates = self._load_inflation_rates_with_validation()
         except Exception as e:
             errors.append(f"Inflation rates: {str(e)}")
         
         try:
-            self.equity_returns = self._load_equity_returns()
+            self.equity_returns = self._load_equity_returns_with_validation()
         except Exception as e:
             errors.append(f"Equity returns: {str(e)}")
         
         try:
-            self.bond_returns = self._load_bond_returns()
+            self.bond_returns = self._load_bond_returns_with_validation()
         except Exception as e:
             errors.append(f"Bond returns: {str(e)}")
         
@@ -305,7 +345,8 @@ class HistoricalDataManager:
             "25% Equities/75% Bonds": PortfolioAllocation("25% Equities/75% Bonds", 0.25, 0.75, 0.0),
             "50% Equities/50% Bonds": PortfolioAllocation("50% Equities/50% Bonds", 0.50, 0.50, 0.0),
             "75% Equities/25% Bonds": PortfolioAllocation("75% Equities/25% Bonds", 0.75, 0.25, 0.0),
-            "100% Equities": PortfolioAllocation("100% Equities", 1.0, 0.0, 0.0)
+            "100% Equities": PortfolioAllocation("100% Equities", 1.0, 0.0, 0.0),
+            "Dynamic Glide Path (Age-Based)": DynamicGlidePath()
         }
         return allocations
     
@@ -474,3 +515,154 @@ class HistoricalDataManager:
                 diagnostics.append("  ❌ Insufficient overlapping data (need at least 10 years)")
         
         return "\n".join(diagnostics)
+    
+    def _load_equity_returns_with_validation(self) -> pd.Series:
+        """Load UK equity returns data with enhanced validation and missing year handling."""
+        file_path = os.path.join(self.data_directory, "uk_equity_returns.csv")
+        
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Equity returns data file not found: {file_path}")
+        
+        try:
+            df = pd.read_csv(file_path)
+            
+            # Handle missing years if needed
+            if self._has_missing_years(df, 'year'):
+                print(f"⚠️  Filling missing years in equity returns data...")
+                df = self.validator.handle_missing_years(df, 'return')
+            
+            # Load inflation data first if not already loaded
+            if self.inflation_rates is None:
+                self.inflation_rates = self._load_inflation_rates_with_validation()
+            
+            # Convert to real returns
+            inflation_rates = self._get_inflation_for_year(df['year'])
+            df['real_return'] = (1 + df['return']) / (1 + inflation_rates) - 1
+            
+            return df.set_index('year')['real_return']
+            
+        except Exception as e:
+            raise ValueError(f"Error loading equity returns: {str(e)}")
+    
+    def _load_bond_returns_with_validation(self) -> pd.Series:
+        """Load UK bond returns data with enhanced validation and missing year handling."""
+        file_path = os.path.join(self.data_directory, "uk_bond_returns.csv")
+        
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Bond returns data file not found: {file_path}")
+        
+        try:
+            df = pd.read_csv(file_path)
+            
+            # Handle missing years if needed
+            if self._has_missing_years(df, 'year'):
+                print(f"⚠️  Filling missing years in bond returns data...")
+                df = self.validator.handle_missing_years(df, 'return')
+            
+            # Load inflation data first if not already loaded
+            if self.inflation_rates is None:
+                self.inflation_rates = self._load_inflation_rates_with_validation()
+            
+            # Convert to real returns
+            inflation_rates = self._get_inflation_for_year(df['year'])
+            df['real_return'] = (1 + df['return']) / (1 + inflation_rates) - 1
+            
+            return df.set_index('year')['real_return']
+            
+        except Exception as e:
+            raise ValueError(f"Error loading bond returns: {str(e)}")
+    
+    def _load_inflation_rates_with_validation(self) -> pd.Series:
+        """Load UK inflation rates data with enhanced validation and missing year handling."""
+        file_path = os.path.join(self.data_directory, "uk_inflation_rates.csv")
+        
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Inflation rates data file not found: {file_path}")
+        
+        try:
+            df = pd.read_csv(file_path)
+            
+            # Handle missing years if needed
+            if self._has_missing_years(df, 'year'):
+                print(f"⚠️  Filling missing years in inflation rates data...")
+                df = self.validator.handle_missing_years(df, 'inflation_rate')
+            
+            return df.set_index('year')['inflation_rate']
+            
+        except Exception as e:
+            raise ValueError(f"Error loading inflation rates: {str(e)}")
+    
+    def _has_missing_years(self, df: pd.DataFrame, year_column: str) -> bool:
+        """Check if there are missing years in the data sequence."""
+        if df.empty or year_column not in df.columns:
+            return False
+        
+        years = sorted(df[year_column].dropna().astype(int))
+        if len(years) < 2:
+            return False
+        
+        # Check if there are gaps in the year sequence
+        expected_years = list(range(years[0], years[-1] + 1))
+        return len(years) != len(expected_years)
+    
+    def get_data_quality_report(self) -> str:
+        """
+        Generate a comprehensive data quality report using the validator.
+        
+        Returns:
+            Formatted data quality report string
+        """
+        return self.validator.generate_data_quality_report()
+    
+    def validate_data_quality(self) -> ValidationResult:
+        """
+        Perform comprehensive data quality validation.
+        
+        Returns:
+            ValidationResult with detailed validation information
+        """
+        return self.validator.validate_all_data_files()
+    
+    def get_data_statistics(self) -> Dict[str, Dict[str, float]]:
+        """
+        Get statistical summary of loaded data.
+        
+        Returns:
+            Dictionary with statistics for each data type
+        """
+        stats = {}
+        
+        if self.equity_returns is not None:
+            stats['equity_returns'] = {
+                'count': len(self.equity_returns),
+                'mean': float(self.equity_returns.mean()),
+                'std': float(self.equity_returns.std()),
+                'min': float(self.equity_returns.min()),
+                'max': float(self.equity_returns.max()),
+                'year_range_start': int(self.equity_returns.index.min()),
+                'year_range_end': int(self.equity_returns.index.max())
+            }
+        
+        if self.bond_returns is not None:
+            stats['bond_returns'] = {
+                'count': len(self.bond_returns),
+                'mean': float(self.bond_returns.mean()),
+                'std': float(self.bond_returns.std()),
+                'min': float(self.bond_returns.min()),
+                'max': float(self.bond_returns.max()),
+                'year_range_start': int(self.bond_returns.index.min()),
+                'year_range_end': int(self.bond_returns.index.max())
+            }
+        
+        if self.inflation_rates is not None:
+            stats['inflation_rates'] = {
+                'count': len(self.inflation_rates),
+                'mean': float(self.inflation_rates.mean()),
+                'std': float(self.inflation_rates.std()),
+                'min': float(self.inflation_rates.min()),
+                'max': float(self.inflation_rates.max()),
+                'year_range_start': int(self.inflation_rates.index.min()),
+                'year_range_end': int(self.inflation_rates.index.max())
+            }
+        
+        return stats

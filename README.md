@@ -5,7 +5,7 @@ A command-line retirement prediction tool that uses Monte Carlo simulation with 
 ## Key Features
 
 - **Monte Carlo Simulation**: Uses historical stock and bond returns to run 10,000+ retirement scenarios
-- **Multiple Portfolio Allocations**: Tests 6 different portfolio mixes from 100% cash to 100% equity
+- **Multiple Portfolio Allocations**: Tests 7 different portfolio mixes from 100% cash to 100% equity, including dynamic glide path
 - **Guard Rails System**: Implements dynamic spending adjustments based on portfolio performance  
 - **UK Tax Integration**: Automatically calculates UK taxes on retirement withdrawals
 - **Real Returns Focus**: All calculations in inflation-adjusted terms (today's purchasing power)
@@ -337,7 +337,7 @@ Charts are saved in the `charts/` directory with timestamps for easy reference.
 
 ## Portfolio Allocations Explained
 
-The tool tests 6 different portfolio allocations to help you understand the trade-offs between risk and retirement timing. Each allocation represents a different investment strategy:
+The tool tests 7 different portfolio allocations to help you understand the trade-offs between risk and retirement timing. Each allocation represents a different investment strategy:
 
 ### 1. 100% Cash (Ultra-Conservative)
 - **Composition**: 100% cash equivalents (savings accounts, money market funds)
@@ -380,6 +380,20 @@ The tool tests 6 different portfolio allocations to help you understand the trad
 - **Risk Level**: Highest volatility, maximum growth potential
 - **Typical Result**: Earliest retirement age but highest risk
 - **Best For**: Long investment horizon, high risk tolerance
+
+### 7. Dynamic Glide Path (Age-Based)
+- **Composition**: Automatically adjusts from 90% equities (age 25) to 20% equities (age 75+)
+- **Expected Real Return**: Varies by age - higher when young, lower when older
+- **Risk Level**: High growth early, conservative in retirement
+- **Typical Result**: Balanced approach with good success rates and reasonable retirement age
+- **Best For**: Those wanting automatic risk reduction as they age (target-date fund approach)
+
+**Glide Path Details:**
+- **Age 25 and younger**: 90% equities / 10% bonds
+- **Age 25 to retirement**: Linear decrease in equity allocation
+- **At retirement**: 30% equities / 70% bonds
+- **Age 75 and older**: 20% equities / 80% bonds
+- **Benefits**: Captures growth when young, reduces volatility near/in retirement
 
 ### Portfolio Selection Guidance
 

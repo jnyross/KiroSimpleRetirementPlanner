@@ -156,21 +156,21 @@
   - Implement better progress reporting during long simulations
   - _Requirements: 1.4, 4.5, 9.2, 9.3_
 
-- [ ] 23. Optimize performance for large simulations
+- [x] 23. Optimize performance for large simulations
   - Profile the Monte Carlo simulation performance
   - Implement vectorized operations where possible
   - Add memory management for very large simulation runs
   - Consider parallel processing for portfolio comparisons
   - _Requirements: 2.3, 2.4, 3.1, 3.2_
 
-- [ ] 24. Add data validation and quality checks
+- [x] 24. Add data validation and quality checks
   - Implement comprehensive validation of historical data files
   - Add checks for data consistency and reasonable ranges
   - Create data quality reports and warnings
   - Add functionality to handle missing years in historical data
   - _Requirements: 2.1, 2.2, 8.1, 8.3, 9.4_
 
-- [ ] 25. Final application testing and validation
+- [x] 25. Final application testing and validation
   - Run comprehensive end-to-end tests with realistic user scenarios
   - Test the complete CLI workflow from input to chart generation
   - Validate that all 6 portfolio allocations produce reasonable results

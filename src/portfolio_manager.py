@@ -22,7 +22,11 @@ class PortfolioManager:
             data_manager: Historical data manager instance
         """
         self.data_manager = data_manager
-        self.allocations = self._create_portfolio_allocations()
+        # Use allocations from data_manager instead of creating our own
+        if data_manager.portfolio_allocations is not None:
+            self.allocations = data_manager.portfolio_allocations
+        else:
+            self.allocations = self._create_portfolio_allocations()
         
     def _create_portfolio_allocations(self) -> Dict[str, PortfolioAllocation]:
         """

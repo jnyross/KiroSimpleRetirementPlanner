@@ -9,6 +9,7 @@ import click
 import sys
 from typing import Optional, Tuple
 from .models import UserInput
+from .data_validator import DataValidator
 
 
 class RetirementCalculatorCLI:
@@ -362,6 +363,67 @@ def calculate(verbose: bool, charts: bool, simulations: int):
         cli_handler.handle_keyboard_interrupt()
     except Exception as e:
         cli_handler.display_error(f"Unexpected error: {str(e)}", is_fatal=True)
+
+
+@cli.command()
+@click.option('--data-dir', default='data', help='Directory containing data files')
+@click.option('--verbose', '-v', is_flag=True, help='Show detailed validation output')
+def validate_data(data_dir: str, verbose: bool):
+    """Validate historical data files for quality and consistency."""
+    click.echo("🔍 Validating historical data files...")
+    
+    try:
+        validator = DataValidator(data_dir)
+        result = validator.validate_all_data_files()
+        
+        if result.is_valid:
+            click.echo("✅ All data files passed validation!")
+            
+            if verbose:
+                click.echo("\nValidation Details:")
+                if result.info:
+                    click.echo("Information:")
+                    for info in result.info:
+                        click.echo(f"  • {info}")
+                
+                if result.warnings:
+                    click.echo("\nWarnings:")
+                    for warning in result.warnings:
+                        click.echo(f"  ⚠️  {warning}")
+        else:
+            click.echo("❌ Data validation failed!")
+            click.echo("\nErrors:")
+            for error in result.errors:
+                click.echo(f"  • {error}")
+            
+            if result.warnings:
+                click.echo("\nWarnings:")
+                for warning in result.warnings:
+                    click.echo(f"  ⚠️  {warning}")
+            
+            sys.exit(1)
+            
+    except Exception as e:
+        click.echo(f"❌ Error during validation: {str(e)}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.option('--data-dir', default='data', help='Directory containing data files')
+def data_report(data_dir: str):
+    """Generate a comprehensive data quality report."""
+    click.echo("📊 Generating data quality report...")
+    
+    try:
+        from .data_manager import HistoricalDataManager
+        
+        data_manager = HistoricalDataManager(data_dir)
+        report_content = data_manager.get_data_quality_report()
+        click.echo(report_content)
+        
+    except Exception as e:
+        click.echo(f"❌ Error generating report: {str(e)}", err=True)
+        sys.exit(1)
 
 
 @cli.command()

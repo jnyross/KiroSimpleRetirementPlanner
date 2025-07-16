@@ -14,6 +14,13 @@ from .portfolio_manager import PortfolioManager
 from .tax_calculator import UKTaxCalculator
 from .guard_rails import GuardRailsEngine
 
+# Import optimized simulator
+try:
+    from .simulator_optimized import OptimizedMonteCarloSimulator
+    OPTIMIZED_AVAILABLE = True
+except ImportError:
+    OPTIMIZED_AVAILABLE = False
+
 
 class MonteCarloSimulator:
     """Monte Carlo simulation engine for retirement planning."""
@@ -67,10 +74,13 @@ class MonteCarloSimulator:
             user_input.desired_annual_income
         )
         
-        # Generate bootstrap returns for retirement period
-        retirement_returns = self.portfolio_manager.generate_bootstrap_returns(
-            allocation, years_in_retirement, 1
-        )[0]
+        # Get available years for bootstrap sampling
+        equity_years = set(self.data_manager.equity_returns.index)
+        bond_years = set(self.data_manager.bond_returns.index)
+        available_years = list(equity_years & bond_years)
+        
+        # Bootstrap sample years for the entire retirement period
+        sampled_years = np.random.choice(available_years, size=years_in_retirement, replace=True)
         
         # Simulate retirement with guard rails
         portfolio_values = np.zeros(years_in_retirement + 1)
@@ -79,10 +89,26 @@ class MonteCarloSimulator:
         for year in range(years_in_retirement):
             # Start with current portfolio value
             current_value = portfolio_values[year]
+            current_age = retirement_age + year
             
             # Apply market return first
             if current_value > 0:
-                current_value *= (1 + retirement_returns[year])
+                # Get allocation for current age (handles dynamic allocations)
+                equity_pct, bond_pct, cash_pct = allocation.get_allocation_for_age(current_age, retirement_age)
+                
+                # Get returns for the sampled year
+                sampled_year = sampled_years[year]
+                equity_return = self.data_manager.equity_returns[sampled_year]
+                bond_return = self.data_manager.bond_returns[sampled_year]
+                
+                # Calculate portfolio return with current allocation
+                portfolio_return = (
+                    equity_pct * equity_return +
+                    bond_pct * bond_return +
+                    cash_pct * 0.0  # Cash returns 0% real return
+                )
+                
+                current_value *= (1 + portfolio_return)
             
             # Calculate withdrawal with guard rails (based on post-return value)
             withdrawal, _ = self.guard_rails_engine.calculate_withdrawal_adjustment(
@@ -117,21 +143,45 @@ class MonteCarloSimulator:
         if years_to_retirement <= 0:
             return user_input.current_savings
         
-        # Generate bootstrap returns for accumulation period
-        accumulation_returns = self.portfolio_manager.generate_bootstrap_returns(
-            allocation, years_to_retirement, 1
-        )[0]
-        
         # Calculate portfolio growth with monthly contributions
         portfolio_value = user_input.current_savings
         annual_contribution = user_input.monthly_savings * 12
+        retirement_age = user_input.current_age + years_to_retirement
         
-        for year in range(years_to_retirement):
+        # Get available years for bootstrap sampling
+        if self.data_manager.equity_returns is None or self.data_manager.bond_returns is None:
+            raise ValueError("Historical data not loaded")
+        
+        equity_years = set(self.data_manager.equity_returns.index)
+        bond_years = set(self.data_manager.bond_returns.index)
+        available_years = list(equity_years & bond_years)
+        
+        # Bootstrap sample years for the entire accumulation period
+        sampled_years = np.random.choice(available_years, size=years_to_retirement, replace=True)
+        
+        for year_idx in range(years_to_retirement):
+            current_age = user_input.current_age + year_idx
+            
             # Apply annual contribution (assume at beginning of year)
             portfolio_value += annual_contribution
             
+            # Get allocation for current age (handles dynamic allocations)
+            equity_pct, bond_pct, cash_pct = allocation.get_allocation_for_age(current_age, retirement_age)
+            
+            # Get returns for the sampled year
+            sampled_year = sampled_years[year_idx]
+            equity_return = self.data_manager.equity_returns[sampled_year]
+            bond_return = self.data_manager.bond_returns[sampled_year]
+            
+            # Calculate portfolio return with current allocation
+            portfolio_return = (
+                equity_pct * equity_return +
+                bond_pct * bond_return +
+                cash_pct * 0.0  # Cash returns 0% real return
+            )
+            
             # Apply market return
-            portfolio_value *= (1 + accumulation_returns[year])
+            portfolio_value *= (1 + portfolio_return)
         
         return portfolio_value
     
@@ -502,3 +552,42 @@ class MonteCarloSimulator:
             
         except Exception:
             return False
+
+
+def create_simulator(data_manager: HistoricalDataManager,
+                    portfolio_manager: PortfolioManager,
+                    tax_calculator: UKTaxCalculator,
+                    guard_rails_engine: GuardRailsEngine,
+                    num_simulations: int = 10000,
+                    use_optimized: bool = True,
+                    batch_size: int = 1000,
+                    use_parallel: bool = True) -> MonteCarloSimulator:
+    """
+    Factory function to create the appropriate simulator.
+    
+    Args:
+        data_manager: Historical data manager
+        portfolio_manager: Portfolio manager
+        tax_calculator: UK tax calculator
+        guard_rails_engine: Guard rails engine
+        num_simulations: Number of simulations to run
+        use_optimized: Whether to use optimized simulator if available
+        batch_size: Batch size for memory management (optimized only)
+        use_parallel: Whether to use parallel processing (optimized only)
+        
+    Returns:
+        Appropriate simulator instance
+    """
+    if use_optimized and OPTIMIZED_AVAILABLE:
+        return OptimizedMonteCarloSimulator(
+            data_manager, portfolio_manager, tax_calculator, guard_rails_engine,
+            num_simulations, batch_size, use_parallel
+        )
+    else:
+        if use_optimized and not OPTIMIZED_AVAILABLE:
+            print("⚠️  Optimized simulator not available, falling back to standard simulator")
+        
+        return MonteCarloSimulator(
+            data_manager, portfolio_manager, tax_calculator, guard_rails_engine,
+            num_simulations
+        )
