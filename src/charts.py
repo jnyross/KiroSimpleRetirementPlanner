@@ -157,9 +157,18 @@ class ChartGenerator:
         # Formatting
         ax.set_xlabel('Age')
         ax.set_ylabel('Portfolio Value (£)')
+        
+        # Determine if portfolio grows or shrinks
+        trend_note = ""
+        if len(p50) > 1:
+            if p50[-1] > p50[0]:
+                trend_note = " (Portfolio grows during retirement)"
+            else:
+                trend_note = " (Portfolio declines during retirement)"
+        
         ax.set_title(f'Portfolio Value Projections - {portfolio_name}\\n'
                     f'Retirement Age: {portfolio_result.retirement_age}, '
-                    f'Success Rate: {portfolio_result.success_rate:.1%}')
+                    f'Success Rate: {portfolio_result.success_rate:.1%}{trend_note}')
         
         # Format y-axis as currency
         ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'£{x:,.0f}'))

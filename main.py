@@ -179,12 +179,21 @@ class RetirementCalculatorApp:
         
         # Display portfolio comparison
         print(f"\\nPORTFOLIO COMPARISON:")
-        print(f"{'Portfolio':<25} {'Retirement Age':<15} {'Success Rate':<15}")
-        print("-" * 55)
+        print(f"{'Portfolio':<25} {'Retirement Age':<15} {'Success Rate':<15} {'Median End Wealth':<20}")
+        print("-" * 75)
         
         for result in results.portfolio_results:
             success_rate = f"{result.success_rate:.1%}"
-            print(f"{result.portfolio_allocation.name:<25} {result.retirement_age:<15} {success_rate:<15}")
+            
+            # Get median end wealth at age 100 from percentile data
+            median_end_wealth = "N/A"
+            if (result.portfolio_allocation.name in results.percentile_data and 
+                "50th" in results.percentile_data[result.portfolio_allocation.name]):
+                percentile_50 = results.percentile_data[result.portfolio_allocation.name]["50th"]
+                if len(percentile_50) > 0:
+                    median_end_wealth = f"£{percentile_50[-1]:,.0f}"
+            
+            print(f"{result.portfolio_allocation.name:<25} {result.retirement_age:<15} {success_rate:<15} {median_end_wealth:<20}")
         
         # Display analysis insights
         failure_analysis = self.analyzer.calculate_failure_analysis(
@@ -199,6 +208,23 @@ class RetirementCalculatorApp:
         print(f"  Earliest Possible Retirement: Age {comparison.get('earliest_retirement_age', 'N/A')}")
         print(f"  Best Success Rate: {comparison.get('best_success_rate', 0):.1%}")
         print(f"  Average Success Rate: {comparison.get('average_success_rate', 0):.1%}")
+        
+        # Calculate and display withdrawal rate context
+        recommended_result = None
+        for result in results.portfolio_results:
+            if result.portfolio_allocation.name == results.recommended_portfolio.name:
+                recommended_result = result
+                break
+        
+        if recommended_result:
+            # Calculate withdrawal rate for recommended portfolio
+            gross_withdrawal = self.tax_calculator.calculate_gross_needed(results.user_input.desired_annual_income)
+            portfolio_value = recommended_result.portfolio_values[0] if len(recommended_result.portfolio_values) > 0 else 0
+            if portfolio_value > 0:
+                withdrawal_rate = gross_withdrawal / portfolio_value
+                print(f"  Withdrawal Rate: {withdrawal_rate:.1%} (£{gross_withdrawal:,.0f} from £{portfolio_value:,.0f})")
+                if withdrawal_rate < 0.04:
+                    print(f"  Note: Low withdrawal rate means portfolio may grow during retirement")
         
         # Display improvement suggestions
         suggestions = self.analyzer.generate_improvement_suggestions(
