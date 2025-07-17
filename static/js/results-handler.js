@@ -33,6 +33,14 @@ class ResultsHandler {
         this.progressStatus = document.getElementById('progress-status');
         this.progressPortfolio = document.getElementById('progress-portfolio');
         
+        // Notification elements
+        this.notificationContainer = document.getElementById('notification-container');
+        this.notification = document.getElementById('notification');
+        this.notificationIcon = document.getElementById('notification-icon');
+        this.notificationTitle = document.getElementById('notification-title');
+        this.notificationMessage = document.getElementById('notification-message');
+        this.notificationClose = document.getElementById('notification-close');
+        
         // Results section elements
         this.resultsSection = document.getElementById('results');
         this.recommendedPortfolio = document.getElementById('recommended-portfolio');
@@ -95,6 +103,13 @@ class ResultsHandler {
                 }
             }
         });
+        
+        // Notification close handler
+        if (this.notificationClose) {
+            this.notificationClose.addEventListener('click', () => {
+                this.hideNotification();
+            });
+        }
     }
     
     /**
@@ -108,52 +123,130 @@ class ResultsHandler {
             return;
         }
         
-        try {
-            this.setCalculatingState(true);
-            this.showProgressBar();
-            
-            // Get form data
-            const formData = this.getFormData();
-            
-            // Submit calculation request
-            const response = await fetch('/calculate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.currentResults = result;
-                this.currentCharts = result.charts;
-                this.calculationId = result.calculation_id;
+        const maxRetries = 2;
+        let retryCount = 0;
+        
+        while (retryCount <= maxRetries) {
+            try {
+                this.setCalculatingState(true);
+                this.showProgressBar();
                 
-                // Final progress update
-                this.updateProgress(100, 'Complete', 'Preparing results...');
+                if (retryCount > 0) {
+                    this.updateProgress(0, `Retrying calculation (${retryCount}/${maxRetries})...`, 'Attempting to reconnect...');
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+                }
                 
-                // Small delay to show completion
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // Get form data
+                const formData = this.getFormData();
                 
-                this.displayResults(result);
-                this.showResults();
-                this.hideProgressBar();
+                // Submit calculation request with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
                 
-                // Update browser history
-                history.pushState({ section: 'results' }, 'Results', '#results');
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                    signal: controller.signal
+                });
                 
-            } else {
-                this.handleCalculationError(result.error || 'Calculation failed', result.errors);
+                clearTimeout(timeoutId);
+                
+                // Check if response is ok
+                if (!response.ok) {
+                    let errorMessage = `Server error (${response.status}): `;
+                    
+                    if (response.status === 408) {
+                        errorMessage += 'Request timeout. Please try again.';
+                    } else if (response.status === 429) {
+                        errorMessage += 'Too many requests. Please wait a moment and try again.';
+                    } else if (response.status === 500) {
+                        errorMessage += 'Internal server error. Please try again.';
+                    } else if (response.status === 502 || response.status === 503) {
+                        errorMessage += 'Server temporarily unavailable. Please try again.';
+                    } else {
+                        errorMessage += 'Please try again.';
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    this.currentResults = result;
+                    this.currentCharts = result.charts;
+                    this.calculationId = result.calculation_id;
+                    
+                    // Final progress update
+                    this.updateProgress(100, 'Complete', 'Preparing results...');
+                    
+                    // Small delay to show completion
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    this.displayResults(result);
+                    this.showResults();
+                    this.hideProgressBar();
+                    
+                    // Update browser history
+                    history.pushState({ section: 'results' }, 'Results', '#results');
+                    
+                    // Show success notification
+                    this.showSuccessNotification(
+                        'Calculation Complete!',
+                        'Your retirement analysis has been successfully calculated.'
+                    );
+                    
+                    return; // Success - exit retry loop
+                    
+                } else {
+                    this.handleCalculationError(result.error || 'Calculation failed', result.errors);
+                    return; // Don't retry on validation errors
+                }
+                
+            } catch (error) {
+                console.error('Calculation error:', error);
+                
+                let errorMessage = 'An unexpected error occurred. Please try again.';
+                let shouldRetry = false;
+                
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Calculation timed out. This may be due to high server load.';
+                    shouldRetry = true;
+                } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage = 'Network connection failed. Please check your internet connection.';
+                    shouldRetry = true;
+                } else if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
+                    errorMessage = error.message;
+                    shouldRetry = true;
+                } else if (error.name === 'SyntaxError') {
+                    errorMessage = 'Server returned invalid data. Please try again or contact support.';
+                    shouldRetry = false;
+                }
+                
+                if (shouldRetry && retryCount < maxRetries) {
+                    retryCount++;
+                    continue; // Retry
+                } else {
+                    // Final retry or non-retryable error
+                    if (retryCount > 0) {
+                        errorMessage += ` (Failed after ${retryCount} retries)`;
+                    }
+                    
+                    // Show error notification
+                    this.showErrorNotification('Calculation Failed', errorMessage);
+                    this.handleCalculationError(errorMessage);
+                    break; // Exit retry loop
+                }
+            } finally {
+                // Only reset states if we're not retrying
+                if (retryCount > maxRetries || this.currentResults) {
+                    this.setCalculatingState(false);
+                    this.hideProgressBar();
+                }
             }
-            
-        } catch (error) {
-            console.error('Calculation error:', error);
-            this.handleCalculationError('Network error occurred. Please try again.');
-        } finally {
-            this.setCalculatingState(false);
-            this.hideProgressBar();
         }
     }
     
@@ -294,6 +387,70 @@ class ResultsHandler {
                 this.progressInterval = null;
             }
         }, 300); // Update every 300ms
+    }
+    
+    /**
+     * Show notification
+     */
+    showNotification(type, title, message, duration = 5000) {
+        if (!this.notificationContainer || !this.notification) return;
+        
+        // Clear existing notification classes
+        this.notification.classList.remove('success', 'error', 'warning', 'info');
+        
+        // Add new type class
+        this.notification.classList.add(type);
+        
+        // Set content
+        if (this.notificationTitle) this.notificationTitle.textContent = title;
+        if (this.notificationMessage) this.notificationMessage.textContent = message;
+        
+        // Show notification
+        this.notificationContainer.style.display = 'block';
+        
+        // Auto-hide after duration
+        if (duration > 0) {
+            setTimeout(() => {
+                this.hideNotification();
+            }, duration);
+        }
+    }
+    
+    /**
+     * Hide notification
+     */
+    hideNotification() {
+        if (this.notificationContainer) {
+            this.notificationContainer.style.display = 'none';
+        }
+    }
+    
+    /**
+     * Show success notification
+     */
+    showSuccessNotification(title, message, duration = 4000) {
+        this.showNotification('success', title, message, duration);
+    }
+    
+    /**
+     * Show error notification
+     */
+    showErrorNotification(title, message, duration = 8000) {
+        this.showNotification('error', title, message, duration);
+    }
+    
+    /**
+     * Show warning notification
+     */
+    showWarningNotification(title, message, duration = 6000) {
+        this.showNotification('warning', title, message, duration);
+    }
+    
+    /**
+     * Show info notification
+     */
+    showInfoNotification(title, message, duration = 5000) {
+        this.showNotification('info', title, message, duration);
     }
     
     /**
