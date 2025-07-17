@@ -280,7 +280,7 @@ class MonteCarloSimulator:
     
     def find_optimal_retirement_age(self, user_input: UserInput,
                                   allocation: PortfolioAllocation,
-                                  target_success_rate: float = 0.99,
+                                  target_success_rate: float = None,
                                   show_progress: bool = True) -> Optional[int]:
         """
         Find optimal retirement age for target success rate.
@@ -288,12 +288,16 @@ class MonteCarloSimulator:
         Args:
             user_input: User input parameters
             allocation: Portfolio allocation
-            target_success_rate: Target success rate (default: 99%)
+            target_success_rate: Target success rate (default: uses user's target)
             show_progress: Whether to show progress bar
             
         Returns:
             Optimal retirement age or None if not achievable
         """
+        # Use user's target success rate if not explicitly provided
+        if target_success_rate is None:
+            target_success_rate = user_input.target_success_rate
+            
         min_age = user_input.current_age + 1
         max_age = 95  # Maximum reasonable retirement age
         
@@ -333,19 +337,22 @@ class MonteCarloSimulator:
         return best_age
     
     def run_comprehensive_simulation(self, user_input: UserInput,
-                                   target_success_rate: float = 0.99,
+                                   target_success_rate: float = None,
                                    show_progress: bool = True) -> Dict[str, SimulationResult]:
         """
         Run comprehensive simulation for all portfolio allocations.
         
         Args:
             user_input: User input parameters
-            target_success_rate: Target success rate
+            target_success_rate: Target success rate (default: uses user's target)
             show_progress: Whether to show progress bar
             
         Returns:
             Dictionary mapping portfolio names to simulation results
         """
+        # Use user's target success rate if not explicitly provided
+        if target_success_rate is None:
+            target_success_rate = user_input.target_success_rate
         results = {}
         allocations = self.portfolio_manager.get_all_allocations()
         

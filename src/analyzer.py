@@ -34,6 +34,9 @@ class ResultsAnalyzer:
         Returns:
             Complete retirement analysis results
         """
+        # Update confidence threshold to match user's target
+        self.confidence_threshold = user_input.target_success_rate
+        
         # Convert to list format
         results_list = list(portfolio_results.values())
         

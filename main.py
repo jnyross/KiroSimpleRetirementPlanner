@@ -158,7 +158,7 @@ class RetirementCalculatorApp:
             self.cli.display_progress("📊 Setting up results analyzer...")
             try:
                 self.analyzer = ResultsAnalyzer()
-                self.cli.display_success("Results analyzer ready (99% confidence threshold)")
+                self.cli.display_success("Results analyzer ready")
             except Exception as e:
                 self.cli.display_error(f"Failed to initialize results analyzer: {str(e)}", is_fatal=True)
             

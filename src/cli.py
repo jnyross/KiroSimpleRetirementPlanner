@@ -41,13 +41,17 @@ class RetirementCalculatorCLI:
         # Collect desired annual income
         desired_income = self._prompt_for_desired_income()
         
+        # Collect target success rate
+        target_success_rate = self._prompt_for_success_rate()
+        
         # Create and validate user input
         try:
             user_input = UserInput(
                 current_age=current_age,
                 current_savings=current_savings,
                 monthly_savings=monthly_savings,
-                desired_annual_income=desired_income
+                desired_annual_income=desired_income,
+                target_success_rate=target_success_rate
             )
             
             # Display summary for confirmation
@@ -190,6 +194,48 @@ class RetirementCalculatorCLI:
                 click.echo("   Examples: 30000, 25000.50")
                 click.echo("   Avoid commas, currency symbols, or letters.")
     
+    def _prompt_for_success_rate(self) -> float:
+        """Prompt for target success rate with validation."""
+        while True:
+            try:
+                click.echo("\n💡 Success rate is the probability your money will last until age 100.")
+                click.echo("   Common choices: 99% (very conservative), 95% (conservative), 90% (moderate), 85% (aggressive)")
+                
+                rate = click.prompt(
+                    "What success rate do you want to target? (50-100%)",
+                    type=float,
+                    default=99.0,
+                    show_default=True
+                )
+                
+                # Accept both percentage (e.g., 95) and decimal (e.g., 0.95) formats
+                if rate > 1:
+                    rate = rate / 100.0
+                
+                if 0.5 <= rate <= 1.0:
+                    if rate >= 0.99:
+                        click.echo("✅ Very conservative choice - prioritizing security over early retirement")
+                    elif rate >= 0.95:
+                        click.echo("✅ Conservative choice - good balance of security and flexibility")
+                    elif rate >= 0.90:
+                        click.echo("✅ Moderate choice - accepting some risk for earlier retirement")
+                    elif rate >= 0.85:
+                        click.echo("✅ Aggressive choice - prioritizing early retirement over security")
+                    else:
+                        click.echo("⚠️  Very aggressive choice - significant risk of running out of money")
+                        if not click.confirm("Are you sure about this success rate?"):
+                            continue
+                    
+                    return rate
+                else:
+                    click.echo("❌ Success rate must be between 50% and 100%")
+                    
+            except click.Abort:
+                click.echo("\n👋 Operation cancelled by user.")
+                sys.exit(0)
+            except (ValueError, TypeError):
+                click.echo("❌ Please enter a valid percentage (e.g., 95 or 0.95)")
+    
     def _display_input_summary(self, user_input: UserInput):
         """Display a summary of user input for confirmation."""
         click.echo("\\n=== Input Summary ===")
@@ -197,6 +243,7 @@ class RetirementCalculatorCLI:
         click.echo(f"Current Savings: £{user_input.current_savings:,.2f}")
         click.echo(f"Monthly Savings: £{user_input.monthly_savings:,.2f}")
         click.echo(f"Desired Annual Income: £{user_input.desired_annual_income:,.2f}")
+        click.echo(f"Target Success Rate: {user_input.target_success_rate:.1%}")
         
         # Calculate some helpful metrics
         annual_savings = user_input.monthly_savings * 12

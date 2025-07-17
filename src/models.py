@@ -17,6 +17,7 @@ class UserInput:
     current_savings: float
     monthly_savings: float
     desired_annual_income: float
+    target_success_rate: float = 0.99  # Default to 99%
     
     def __post_init__(self):
         """Validate user input data."""
@@ -28,6 +29,8 @@ class UserInput:
             raise ValueError("Monthly savings cannot be negative")
         if self.desired_annual_income <= 0:
             raise ValueError("Desired annual income must be positive")
+        if not 0.5 <= self.target_success_rate <= 1.0:
+            raise ValueError("Target success rate must be between 50% and 100%")
 
 
 @dataclass
