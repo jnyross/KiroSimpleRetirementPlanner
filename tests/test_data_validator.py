@@ -54,8 +54,8 @@ class TestDataValidator:
         
         assert not result.is_valid
         assert len(result.errors) == 3  # All three files missing
-        assert any("uk_equity_returns.csv" in error for error in result.errors)
-        assert any("uk_bond_returns.csv" in error for error in result.errors)
+        assert any("global_equity_returns.csv" in error for error in result.errors)
+        assert any("global_bond_returns.csv" in error for error in result.errors)
         assert any("uk_inflation_rates.csv" in error for error in result.errors)
     
     def test_validate_equity_returns_valid_data(self):
@@ -65,7 +65,7 @@ class TestDataValidator:
             'year': list(range(2000, 2021)),
             'return': [0.05 + i * 0.01 for i in range(21)]  # 5% to 25%
         }
-        self.create_test_data_file("uk_equity_returns.csv", equity_data)
+        self.create_test_data_file("global_equity_returns.csv", equity_data)
         
         # Create valid inflation data (needed for real returns calculation)
         inflation_data = {
@@ -75,7 +75,7 @@ class TestDataValidator:
         self.create_test_data_file("uk_inflation_rates.csv", inflation_data)
         
         result = self.validator._validate_equity_returns(
-            os.path.join(self.test_dir, "uk_equity_returns.csv")
+            os.path.join(self.test_dir, "global_equity_returns.csv")
         )
         
         assert result.is_valid
@@ -90,10 +90,10 @@ class TestDataValidator:
             'year': list(range(2000, 2011)),
             'wrong_column': [0.05] * 11
         }
-        self.create_test_data_file("uk_equity_returns.csv", equity_data)
+        self.create_test_data_file("global_equity_returns.csv", equity_data)
         
         result = self.validator._validate_equity_returns(
-            os.path.join(self.test_dir, "uk_equity_returns.csv")
+            os.path.join(self.test_dir, "global_equity_returns.csv")
         )
         
         assert not result.is_valid
@@ -106,10 +106,10 @@ class TestDataValidator:
             'year': list(range(2000, 2011)),
             'return': [5.0] * 11  # 500% returns - unreasonable
         }
-        self.create_test_data_file("uk_equity_returns.csv", equity_data)
+        self.create_test_data_file("global_equity_returns.csv", equity_data)
         
         result = self.validator._validate_equity_returns(
-            os.path.join(self.test_dir, "uk_equity_returns.csv")
+            os.path.join(self.test_dir, "global_equity_returns.csv")
         )
         
         assert not result.is_valid
@@ -122,7 +122,7 @@ class TestDataValidator:
             'year': list(range(2000, 2021)),
             'return': [0.03 + i * 0.001 for i in range(21)]  # 3% to 5%
         }
-        self.create_test_data_file("uk_bond_returns.csv", bond_data)
+        self.create_test_data_file("global_bond_returns.csv", bond_data)
         
         # Create valid inflation data
         inflation_data = {
@@ -132,7 +132,7 @@ class TestDataValidator:
         self.create_test_data_file("uk_inflation_rates.csv", inflation_data)
         
         result = self.validator._validate_bond_returns(
-            os.path.join(self.test_dir, "uk_bond_returns.csv")
+            os.path.join(self.test_dir, "global_bond_returns.csv")
         )
         
         assert result.is_valid
@@ -179,10 +179,10 @@ class TestDataValidator:
             'year': [2000, 2001, 2002, None, 2004],
             'return': [0.05, None, 0.07, 0.08, 0.09]
         }
-        self.create_test_data_file("uk_equity_returns.csv", equity_data)
+        self.create_test_data_file("global_equity_returns.csv", equity_data)
         
         result = self.validator._validate_equity_returns(
-            os.path.join(self.test_dir, "uk_equity_returns.csv")
+            os.path.join(self.test_dir, "global_equity_returns.csv")
         )
         
         assert not result.is_valid
@@ -197,10 +197,10 @@ class TestDataValidator:
             'year': years,
             'return': returns
         }
-        self.create_test_data_file("uk_equity_returns.csv", equity_data)
+        self.create_test_data_file("global_equity_returns.csv", equity_data)
         
         result = self.validator._validate_equity_returns(
-            os.path.join(self.test_dir, "uk_equity_returns.csv")
+            os.path.join(self.test_dir, "global_equity_returns.csv")
         )
         
         assert not result.is_valid
@@ -213,10 +213,10 @@ class TestDataValidator:
             'year': list(range(2000, 2005)),
             'return': [0.05] * 5
         }
-        self.create_test_data_file("uk_equity_returns.csv", equity_data)
+        self.create_test_data_file("global_equity_returns.csv", equity_data)
         
         result = self.validator._validate_equity_returns(
-            os.path.join(self.test_dir, "uk_equity_returns.csv")
+            os.path.join(self.test_dir, "global_equity_returns.csv")
         )
         
         assert not result.is_valid
@@ -251,8 +251,8 @@ class TestDataValidator:
         bond_data = {'year': years, 'return': [0.03] * 21}
         inflation_data = {'year': years, 'inflation_rate': [0.02] * 21}
         
-        self.create_test_data_file("uk_equity_returns.csv", equity_data)
-        self.create_test_data_file("uk_bond_returns.csv", bond_data)
+        self.create_test_data_file("global_equity_returns.csv", equity_data)
+        self.create_test_data_file("global_bond_returns.csv", bond_data)
         self.create_test_data_file("uk_inflation_rates.csv", inflation_data)
         
         result = self.validator.validate_all_data_files()
@@ -268,8 +268,8 @@ class TestDataValidator:
         bond_data = {'year': list(range(2001, 2012)), 'return': [0.03] * 11}
         inflation_data = {'year': list(range(2012, 2023)), 'inflation_rate': [0.02] * 11}
         
-        self.create_test_data_file("uk_equity_returns.csv", equity_data)
-        self.create_test_data_file("uk_bond_returns.csv", bond_data)
+        self.create_test_data_file("global_equity_returns.csv", equity_data)
+        self.create_test_data_file("global_bond_returns.csv", bond_data)
         self.create_test_data_file("uk_inflation_rates.csv", inflation_data)
         
         result = self.validator.validate_all_data_files()
@@ -303,8 +303,8 @@ class TestDataValidator:
         bond_data = {'year': years, 'return': [0.03] * 21}
         inflation_data = {'year': years, 'inflation_rate': [0.02] * 21}
         
-        self.create_test_data_file("uk_equity_returns.csv", equity_data)
-        self.create_test_data_file("uk_bond_returns.csv", bond_data)
+        self.create_test_data_file("global_equity_returns.csv", equity_data)
+        self.create_test_data_file("global_bond_returns.csv", bond_data)
         self.create_test_data_file("uk_inflation_rates.csv", inflation_data)
         
         report = self.validator.generate_data_quality_report()
@@ -337,7 +337,7 @@ class TestDataValidator:
             'year': list(range(2000, 2021)),
             'return': returns
         }
-        self.create_test_data_file("uk_equity_returns.csv", equity_data)
+        self.create_test_data_file("global_equity_returns.csv", equity_data)
         
         # Create inflation data
         inflation_data = {
@@ -347,7 +347,7 @@ class TestDataValidator:
         self.create_test_data_file("uk_inflation_rates.csv", inflation_data)
         
         result = self.validator._validate_equity_returns(
-            os.path.join(self.test_dir, "uk_equity_returns.csv")
+            os.path.join(self.test_dir, "global_equity_returns.csv")
         )
         
         # Should detect outliers but still be valid (outliers are warnings, not errors)
@@ -357,7 +357,7 @@ class TestDataValidator:
     def test_empty_file_validation(self):
         """Test validation of empty data files."""
         # Create empty file
-        empty_file = os.path.join(self.test_dir, "uk_equity_returns.csv")
+        empty_file = os.path.join(self.test_dir, "global_equity_returns.csv")
         with open(empty_file, 'w') as f:
             f.write("")  # Empty file
         
@@ -369,7 +369,7 @@ class TestDataValidator:
     def test_malformed_csv_validation(self):
         """Test validation of malformed CSV files."""
         # Create malformed CSV
-        malformed_file = os.path.join(self.test_dir, "uk_equity_returns.csv")
+        malformed_file = os.path.join(self.test_dir, "global_equity_returns.csv")
         with open(malformed_file, 'w') as f:
             f.write("year,return\n2000,0.05\n2001,invalid,extra_column\n")
         
@@ -410,8 +410,8 @@ class TestDataValidatorIntegration:
         
         # Write files
         for filename, data in [
-            ("uk_equity_returns.csv", equity_data),
-            ("uk_bond_returns.csv", bond_data),
+            ("global_equity_returns.csv", equity_data),
+            ("global_bond_returns.csv", bond_data),
             ("uk_inflation_rates.csv", inflation_data)
         ]:
             df = pd.DataFrame(data)
@@ -450,8 +450,8 @@ class TestDataValidatorIntegration:
         inflation_data = {'year': years, 'inflation_rate': [0.02] * 5}
         
         for filename, data in [
-            ("uk_equity_returns.csv", equity_data),
-            ("uk_bond_returns.csv", bond_data),
+            ("global_equity_returns.csv", equity_data),
+            ("global_bond_returns.csv", bond_data),
             ("uk_inflation_rates.csv", inflation_data)
         ]:
             df = pd.DataFrame(data)

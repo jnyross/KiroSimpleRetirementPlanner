@@ -99,8 +99,8 @@ def test_data_file_requirements():
     print("\n=== Testing Data File Requirements ===")
     
     required_files = [
-        'data/uk_equity_returns.csv',
-        'data/uk_bond_returns.csv', 
+        'data/global_equity_returns.csv',
+        'data/global_bond_returns.csv', 
         'data/uk_inflation_rates.csv'
     ]
     

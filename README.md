@@ -547,10 +547,10 @@ Uses current UK tax brackets (2024/25):
 
 ### Data Sources
 
-The tool uses historical UK market data:
-- **UK equity returns (1980-2023)**: FTSE All-Share index annual returns
-- **UK bond returns (1980-2023)**: UK government bond index returns
-- **UK inflation rates (1980-2023)**: Consumer Price Index (CPI) data
+The tool uses historical Global market data:
+- **Global equity returns (1980-2023)**: MSCI World index annual returns
+- **Global bond returns (1980-2023)**: Global government bond index returns
+- **UK inflation rates (1980-2023)**: UK Consumer Price Index (CPI) data
 
 **Data Quality Features:**
 - 44 years of historical data covering multiple market cycles
@@ -625,13 +625,13 @@ retirement-calc-env\Scripts\activate     # Windows
 
 **Missing Data Files**
 ```
-FileNotFoundError: Equity returns file not found: data/uk_equity_returns.csv
+FileNotFoundError: Equity returns file not found: data/global_equity_returns.csv
 ```
 **Solutions**:
 ```bash
 # Check data directory exists and contains required files
 ls data/
-# Should show: uk_equity_returns.csv, uk_bond_returns.csv, uk_inflation_rates.csv
+# Should show: global_equity_returns.csv, global_bond_returns.csv, uk_inflation_rates.csv
 
 # If files are missing, ensure you have the complete download
 # Check file permissions
@@ -645,7 +645,7 @@ pandas.errors.EmptyDataError: No columns to parse from file
 **Solutions**:
 ```bash
 # Check file contents
-head data/uk_equity_returns.csv
+head data/global_equity_returns.csv
 
 # Verify file size (should not be 0 bytes)
 ls -la data/*.csv
@@ -884,7 +884,7 @@ python -u main.py -v -s 1000
 pip list | grep -E "(numpy|pandas|matplotlib)"
 
 # Validate data files manually
-python -c "import pandas as pd; print(pd.read_csv('data/uk_equity_returns.csv').head())"
+python -c "import pandas as pd; print(pd.read_csv('data/global_equity_returns.csv').head())"
 
 # Test individual components
 python -c "from src.models import UserInput; print('Models import OK')"
@@ -898,12 +898,12 @@ retirement-calculator/
 ├── requirements.txt           # Python dependencies
 ├── README.md                 # This file
 ├── data/                     # Historical market data
-│   ├── uk_equity_returns.csv
-│   ├── uk_bond_returns.csv
+│   ├── global_equity_returns.csv
+│   ├── global_bond_returns.csv
 │   └── uk_inflation_rates.csv
 ├── src/                      # Core application modules
 │   ├── models.py            # Data classes
-│   ├── data_manager.py      # Historical data management
+│   ├── data_manager.py      # Historical data loading
 │   ├── portfolio_manager.py # Portfolio allocation logic
 │   ├── tax_calculator.py    # UK tax calculations
 │   ├── guard_rails.py       # Guard rails system
@@ -914,6 +914,7 @@ retirement-calculator/
 └── tests/                   # Unit and integration tests
     ├── test_tax_calculator.py
     ├── test_guard_rails.py
+    ├── test_simulator.py
     └── test_integration.py
 ```
 

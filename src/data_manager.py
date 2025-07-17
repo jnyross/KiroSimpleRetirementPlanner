@@ -99,15 +99,15 @@ class HistoricalDataManager:
             raise ValueError(
                 f"Failed to load required historical data files:\n{error_summary}\n\n"
                 f"Please ensure all required data files are present in the '{self.data_directory}' directory:\n"
-                f"  - uk_equity_returns.csv (columns: year, return)\n"
-                f"  - uk_bond_returns.csv (columns: year, return)\n"
+                f"  - global_equity_returns.csv (columns: year, return)\n"
+                f"  - global_bond_returns.csv (columns: year, return)\n"
                 f"  - uk_inflation_rates.csv (columns: year, inflation_rate)\n\n"
                 f"Each file should contain at least 10 years of annual data."
             )
         
     def _load_equity_returns(self) -> pd.Series:
-        """Load UK equity returns data."""
-        file_path = os.path.join(self.data_directory, "uk_equity_returns.csv")
+        """Load Global equity returns data."""
+        file_path = os.path.join(self.data_directory, "global_equity_returns.csv")
         
         # Check if file exists with helpful error message
         if not os.path.exists(file_path):
@@ -186,8 +186,8 @@ class HistoricalDataManager:
             )
     
     def _load_bond_returns(self) -> pd.Series:
-        """Load UK bond returns data."""
-        file_path = os.path.join(self.data_directory, "uk_bond_returns.csv")
+        """Load Global bond returns data."""
+        file_path = os.path.join(self.data_directory, "global_bond_returns.csv")
         
         # Check if file exists with helpful error message
         if not os.path.exists(file_path):
@@ -471,8 +471,8 @@ class HistoricalDataManager:
         
         # Check each data file
         required_files = [
-            ("uk_equity_returns.csv", "Equity returns"),
-            ("uk_bond_returns.csv", "Bond returns"),
+            ("global_equity_returns.csv", "Equity returns"),
+            ("global_bond_returns.csv", "Bond returns"),
             ("uk_inflation_rates.csv", "Inflation rates")
         ]
         
@@ -517,8 +517,8 @@ class HistoricalDataManager:
         return "\n".join(diagnostics)
     
     def _load_equity_returns_with_validation(self) -> pd.Series:
-        """Load UK equity returns data with enhanced validation and missing year handling."""
-        file_path = os.path.join(self.data_directory, "uk_equity_returns.csv")
+        """Load Global equity returns data with enhanced validation and missing year handling."""
+        file_path = os.path.join(self.data_directory, "global_equity_returns.csv")
         
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Equity returns data file not found: {file_path}")
@@ -545,8 +545,8 @@ class HistoricalDataManager:
             raise ValueError(f"Error loading equity returns: {str(e)}")
     
     def _load_bond_returns_with_validation(self) -> pd.Series:
-        """Load UK bond returns data with enhanced validation and missing year handling."""
-        file_path = os.path.join(self.data_directory, "uk_bond_returns.csv")
+        """Load Global bond returns data with enhanced validation and missing year handling."""
+        file_path = os.path.join(self.data_directory, "global_bond_returns.csv")
         
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Bond returns data file not found: {file_path}")

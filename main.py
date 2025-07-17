@@ -72,8 +72,8 @@ class RetirementCalculatorApp:
                     f"Required data files are missing:\n{str(e)}\n\n"
                     f"{diagnostics}\n\n"
                     f"Please ensure you have the following files in the 'data/' directory:\n"
-                    f"  - uk_equity_returns.csv (columns: year, return)\n"
-                    f"  - uk_bond_returns.csv (columns: year, return)\n"
+                    f"  - global_equity_returns.csv (columns: year, return)\n"
+                    f"  - global_bond_returns.csv (columns: year, return)\n"
                     f"  - uk_inflation_rates.csv (columns: year, inflation_rate)",
                     is_fatal=True
                 )

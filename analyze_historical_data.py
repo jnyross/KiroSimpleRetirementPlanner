@@ -26,8 +26,8 @@ def analyze_historical_data():
     print(f"   Inflation rates: {len(data_manager.inflation_rates)} years (1980-2023)")
     
     # Load raw data for comparison
-    equity_df = pd.read_csv("data/uk_equity_returns.csv")
-    bond_df = pd.read_csv("data/uk_bond_returns.csv")
+    equity_df = pd.read_csv("data/global_equity_returns.csv")
+    bond_df = pd.read_csv("data/global_bond_returns.csv")
     inflation_df = pd.read_csv("data/uk_inflation_rates.csv")
     
     print(f"\n2. NOMINAL RETURNS ANALYSIS:")
