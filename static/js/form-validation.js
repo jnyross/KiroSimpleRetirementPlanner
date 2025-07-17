@@ -231,7 +231,9 @@ class FormValidator {
         const field = this.fields[fieldName];
         if (!field || !field.element) return null;
         
-        const value = field.element.value.trim();
+        // Use raw value if available (for compatibility)
+        const rawValue = field.element.dataset.rawValue;
+        const value = rawValue || field.element.value.trim();
         if (!value) return null;
         
         const numValue = parseFloat(value);
@@ -381,29 +383,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize the calculator form validator
     window.calculatorFormValidator = new FormValidator('calculator-form');
     
-    // Add helpful formatting to number inputs
-    const numberInputs = document.querySelectorAll('input[type="number"]');
-    numberInputs.forEach(input => {
-        // Format numbers with commas on blur (except for age)
-        if (input.id !== 'current_age') {
-            input.addEventListener('blur', function() {
-                if (this.value) {
-                    const num = parseFloat(this.value);
-                    if (!isNaN(num)) {
-                        // Store raw value for form submission
-                        this.dataset.rawValue = num;
-                        // Display formatted value
-                        this.value = num.toLocaleString('en-GB');
-                    }
-                }
-            });
-            
-            // Remove formatting on focus for editing
-            input.addEventListener('focus', function() {
-                if (this.dataset.rawValue) {
-                    this.value = this.dataset.rawValue;
-                }
-            });
-        }
-    });
+    // Note: Number formatting with commas removed because HTML5 number inputs
+    // don't accept formatted values. The browser provides its own number formatting.
 });
