@@ -2042,3 +2042,80 @@ ditional Results Template Styles */
         border: 2px solid #333;
     }
 }
+
+/* Additional Mobile Enhancements */
+@media (max-width: 768px) {
+    /* Enhanced mobile touch targets */
+    .calculate-btn {
+        min-height: 48px; /* Minimum touch target size */
+    }
+    
+    .form-input {
+        min-height: 48px;
+    }
+    
+    .secondary-btn {
+        min-height: 44px;
+    }
+    
+    /* Better chart interaction */
+    .chart-container {
+        touch-action: pan-x pan-y;
+    }
+    
+    /* Improved table scrolling */
+    .results-table-container {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Better progress bar visibility */
+    .progress-container {
+        position: relative;
+        z-index: 100;
+    }
+}
+
+/* Extra small screens (phones in portrait) */
+@media (max-width: 480px) {
+    .header__title {
+        font-size: 2rem;
+    }
+    
+    .header__subtitle {
+        font-size: 0.95rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+    }
+    
+    .calculator-form {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .results-table {
+        font-size: 0.8rem;
+    }
+    
+    .results-table th,
+    .results-table td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .chart-container {
+        padding: 0.5rem;
+    }
+    
+    .notification {
+        padding: 0.75rem;
+    }
+    
+    .notification-title {
+        font-size: 0.9rem;
+    }
+    
+    .notification-message {
+        font-size: 0.8rem;
+    }
+}
