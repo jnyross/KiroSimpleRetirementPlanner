@@ -8,6 +8,7 @@ class FormValidator {
         this.form = document.getElementById(formId);
         this.fields = {};
         this.isValid = false;
+        this.isInitialized = false;
         
         if (!this.form) {
             console.error(`Form with id '${formId}' not found`);
@@ -16,7 +17,9 @@ class FormValidator {
         
         this.initializeFields();
         this.attachEventListeners();
-        this.updateSubmitButton();
+        // Don't validate on initial load
+        this.isInitialized = true;
+        this.updateSubmitButton(false);
     }
     
     /**
@@ -95,21 +98,30 @@ class FormValidator {
         Object.keys(this.fields).forEach(fieldName => {
             const field = this.fields[fieldName];
             if (field.element) {
-                // Validate on input (real-time)
+                // Track if field has been touched
+                field.touched = false;
+                
+                // Validate on input (real-time) - but only if field has been touched
                 field.element.addEventListener('input', () => {
-                    this.validateField(fieldName);
-                    this.updateSubmitButton();
+                    if (field.touched || field.element.value.trim() !== '') {
+                        this.validateField(fieldName);
+                        this.updateSubmitButton();
+                    }
                 });
                 
                 // Validate on blur (when user leaves field)
                 field.element.addEventListener('blur', () => {
+                    field.touched = true;
                     this.validateField(fieldName);
                     this.updateSubmitButton();
                 });
                 
                 // Clear errors on focus
                 field.element.addEventListener('focus', () => {
-                    this.clearFieldError(fieldName);
+                    // Only clear error if field is empty (to avoid clearing valid errors)
+                    if (field.element.value.trim() === '') {
+                        this.clearFieldError(fieldName);
+                    }
                 });
             }
         });
@@ -315,17 +327,20 @@ class FormValidator {
     /**
      * Update submit button state based on form validity
      */
-    updateSubmitButton() {
+    updateSubmitButton(validate = true) {
         const submitButton = this.form.querySelector('button[type="submit"]');
         if (!submitButton) return;
         
-        const isFormValid = this.validateAllFields();
+        // Only validate if requested and form is initialized
+        const isFormValid = validate && this.isInitialized ? this.validateAllFields() : false;
         
-        if (isFormValid) {
+        if (!validate || isFormValid) {
             submitButton.disabled = false;
             submitButton.classList.remove('disabled');
             submitButton.textContent = 'Calculate My Retirement';
-            this.clearGeneralError();
+            if (validate) {
+                this.clearGeneralError();
+            }
         } else {
             submitButton.disabled = true;
             submitButton.classList.add('disabled');
