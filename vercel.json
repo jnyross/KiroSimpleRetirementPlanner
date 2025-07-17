@@ -33,5 +33,6 @@
       "runtime": "python3.9"
     }
   },
-  "installCommand": "pip install --no-cache-dir -r api/requirements.txt"
+  "installCommand": "pip install --no-cache-dir -r api/requirements.txt",
+  "buildCommand": ""
 }
