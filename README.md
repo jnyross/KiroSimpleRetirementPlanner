@@ -1107,6 +1107,7 @@ This project is designed as a simple, effective retirement planning tool for edu
 **Version**: 1.0.1  
 **Last Updated**: January 2025  
 **Compatibility**: Python 3.8+, UK tax system 2024/25  
+**Web Interface**: Flask 2.3.3, Vercel deployment ready  
 
 ## Web Interface
 
