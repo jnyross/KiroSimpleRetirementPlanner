@@ -392,12 +392,16 @@ class WebChartGenerator:
                 'title': yaxis_title,
                 'showgrid': self.config.show_grid,
                 'gridcolor': 'rgba(128,128,128,0.2)',
-                'tickformat': ',.0f',
-                'tickfont': {'size': self.config.axis_font_size}
+                'tickformat': '£,.0f',
+                'tickfont': {'size': self.config.axis_font_size},
+                'tickangle': 0,  # Keep ticks horizontal for better readability
+                'automargin': True,  # Auto-adjust margin for tick labels
+                'tickmode': 'auto',  # Let plotly choose optimal tick spacing
+                'nticks': 8  # Limit number of ticks for cleaner display
             },
             'hovermode': 'x unified' if self.config.include_hover else False,
             'showlegend': self.config.show_legend,
-            'margin': {'l': 60, 'r': 30, 't': 60, 'b': 60},
+            'margin': {'l': 80, 'r': 30, 't': 60, 'b': 60},
             'height': height or self.config.height,
             'plot_bgcolor': 'white',
             'paper_bgcolor': 'white'

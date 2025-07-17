@@ -582,7 +582,12 @@ class ResultsHandler {
         const nameCell = document.createElement('td');
         nameCell.textContent = result.portfolio_allocation.name;
         if (isRecommended) {
-            nameCell.innerHTML += ' <span style="color: #27ae60; font-weight: bold;">★ Recommended</span>';
+            nameCell.classList.add('recommended-cell');
+            // Add recommended badge without affecting alignment
+            const badge = document.createElement('div');
+            badge.className = 'recommended-badge';
+            badge.textContent = 'Recommended';
+            nameCell.appendChild(badge);
         }
         row.appendChild(nameCell);
         
