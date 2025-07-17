@@ -1,6 +1,6 @@
 # Kiro Simple Retirement Planner
 
-A command-line retirement prediction tool that uses Monte Carlo simulation with historical UK market data to calculate when you can retire with 99% confidence of not running out of money by age 100.
+A command-line retirement prediction tool that uses Monte Carlo simulation with historical UK market data to calculate when you can retire with your chosen confidence level (50-100%) of not running out of money by age 100.
 
 ## Key Features
 
@@ -9,7 +9,7 @@ A command-line retirement prediction tool that uses Monte Carlo simulation with 
 - **Guard Rails System**: Implements dynamic spending adjustments based on portfolio performance  
 - **UK Tax Integration**: Automatically calculates UK taxes on retirement withdrawals
 - **Real Returns Focus**: All calculations in inflation-adjusted terms (today's purchasing power)
-- **High Confidence Threshold**: Targets 99% success rate for retirement feasibility
+- **User-Selectable Success Rate**: Choose your own risk tolerance (50-100% success rate)
 - **Comprehensive Analysis**: Provides detailed comparison across all portfolio allocations
 - **Visual Charts**: Generates time-series charts showing portfolio performance over time
 
@@ -264,6 +264,18 @@ Enter your desired annual retirement income (after-tax, £): 30000
 - **Format**: Annual amount in pounds (after-tax)
 - **Purpose**: Target spending level in retirement
 
+#### 5. Target Success Rate
+```
+What success rate do you want to target? (50-100%): 95
+```
+- **Format**: Percentage (50-100)
+- **Purpose**: Your risk tolerance level
+- **Common choices**: 
+  - 99% = Very conservative (prioritizes security)
+  - 95% = Conservative (good balance)
+  - 90% = Moderate (accepts some risk)
+  - 85% = Aggressive (prioritizes early retirement)
+
 ### Sample Output
 
 Here's what you can expect to see after running the analysis:
@@ -278,6 +290,7 @@ User Profile:
   Current Savings: £50,000.00
   Monthly Savings: £1,000.00
   Desired Annual Income: £30,000.00
+  Target Success Rate: 95.0%
 
 RECOMMENDATION:
   Best Portfolio: 75% Equities/25% Bonds
@@ -321,14 +334,14 @@ Charts are saved in the `charts/` directory with timestamps for easy reference.
 ### Understanding the Results
 
 #### Retirement Age
-- **Age shown**: The youngest age where 99% of simulations succeed
-- **"Never"**: Indicates the portfolio allocation cannot achieve 99% success rate
-- **Lower ages**: Generally associated with higher-risk portfolios
+- **Age shown**: The youngest age where your target success rate is achieved
+- **"Never"**: Indicates the portfolio allocation cannot achieve your target success rate
+- **Lower ages**: Generally associated with higher-risk portfolios or lower success rate targets
 
 #### Success Rate
 - **Percentage**: Proportion of simulations where money lasts until age 100
-- **Target**: 99% or higher for recommended retirement age
-- **Interpretation**: Higher percentages indicate more reliable retirement plans
+- **Target**: Your chosen success rate (defaults to 99%)
+- **Interpretation**: Higher percentages indicate more reliable retirement plans but may delay retirement
 
 #### Median End Wealth
 - **Amount**: Expected portfolio value at age 100 in 50% of scenarios
@@ -398,7 +411,7 @@ The tool tests 7 different portfolio allocations to help you understand the trad
 ### Portfolio Selection Guidance
 
 **How the Tool Chooses the Best Portfolio:**
-1. **Success Rate**: Must achieve 99%+ success rate
+1. **Success Rate**: Must achieve your target success rate
 2. **Retirement Age**: Earlier retirement is preferred
 3. **Stability**: Considers volatility and downside risk
 4. **Recovery Ability**: How well the portfolio handles market downturns
@@ -748,8 +761,8 @@ set MPLBACKEND=TkAgg     # Windows
 
 **Unusual Results**
 **"Never" Retirement Age**:
-- **Cause**: Portfolio allocation cannot achieve 99% success rate
-- **Solution**: Increase savings rate, reduce desired income, or accept lower success rate
+- **Cause**: Portfolio allocation cannot achieve your target success rate
+- **Solution**: Increase savings rate, reduce desired income, or accept lower success rate target
 
 **Very High Retirement Ages (70+)**:
 - **Cause**: Conservative portfolio or high income expectations
@@ -956,7 +969,7 @@ This ensures all projections are in today's purchasing power.
 #### Statistical Analysis
 - **Success Rate**: Percentage of simulations where portfolio survives to age 100
 - **Percentile Analysis**: 10th, 50th (median), and 90th percentiles of portfolio values
-- **Confidence Intervals**: 99% confidence threshold for retirement age recommendations
+- **Confidence Intervals**: User-selected confidence threshold for retirement age recommendations
 - **Sensitivity Analysis**: Tests multiple portfolio allocations for comparison
 
 ### Key Assumptions
@@ -1019,8 +1032,8 @@ This ensures all projections are in today's purchasing power.
 
 #### Accuracy Considerations
 - **Statistical Significance**: 10,000+ simulations provide robust statistical basis
-- **Confidence Intervals**: 99% threshold provides high confidence in recommendations
-- **Conservative Approach**: Errs on side of caution for retirement security
+- **Confidence Intervals**: User-selected threshold allows for personal risk tolerance
+- **Conservative Approach**: Default 99% threshold errs on side of caution
 - **Regular Updates**: Historical data and assumptions updated periodically
 
 ## Limitations
@@ -1090,23 +1103,10 @@ This project is designed as a simple, effective retirement planning tool for edu
 
 ---
 
-**Version**: 1.0  
+**Version**: 1.0.1  
 **Last Updated**: January 2025  
-**Compatibility**: Python 3.8+, UK tax system 2024/25oes not account for other income sources in retirement
-- Assumes constant real spending throughout retirement (with guard rails adjustments)
+**Compatibility**: Python 3.8+, UK tax system 2024/25  
 
-## Contributing
-
-This is a focused retirement planning tool. The codebase is designed to be:
-- Easy to understand and modify
-- Well-tested with comprehensive unit tests
-- Documented with clear code comments
-- Extensible for additional features
-
-## License
-
-This project is designed as a simple, effective retirement planning tool. See the code for implementation details.
-
-## Disclaimer
-
-This tool is for educational and planning purposes only. It should not be considered as financial advice. Always consult with qualified financial advisors for retirement planning decisions.
+### Changelog
+- **v1.0.1**: Added user-selectable success rate feature (50-100%)
+- **v1.0.0**: Initial release with dynamic glide path and chart organization
