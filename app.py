@@ -1,6 +1,7 @@
 """
 Flask web application for the retirement calculator.
 Uses application factory pattern for better deployment and testing.
+Optimized for Vercel deployment.
 """
 
 from flask import Flask
