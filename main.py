@@ -318,11 +318,14 @@ class RetirementCalculatorApp:
                     total_charts = sum(len(files) if isinstance(files, list) else 1 for files in chart_files.values())
                     self.cli.display_success(f"📈 Charts generated successfully! Created {total_charts} chart files.")
                     
-                    # Display chart locations
-                    self.cli.display_progress("Chart files saved to:")
+                    # Display chart location
+                    chart_dir = self.chart_generator.get_output_directory()
+                    self.cli.display_progress(f"Chart files saved to: {chart_dir}")
+                    
+                    # Display individual chart files
                     for chart_type, filepath in chart_files.items():
                         if isinstance(filepath, list):
-                            self.cli.display_progress(f"  {chart_type}: {len(filepath)} files in 'charts/' directory")
+                            self.cli.display_progress(f"  {chart_type}: {len(filepath)} files")
                         else:
                             filename = os.path.basename(filepath)
                             self.cli.display_progress(f"  {chart_type}: {filename}")

@@ -25,7 +25,9 @@ class ChartGenerator:
         Args:
             output_directory: Directory to save chart files
         """
-        self.output_directory = output_directory
+        # Create a timestamped subdirectory for this analysis run
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        self.output_directory = os.path.join(output_directory, f"analysis_{timestamp}")
         self._ensure_output_directory()
         
         # Set up matplotlib style
@@ -37,6 +39,10 @@ class ChartGenerator:
         """Ensure the output directory exists."""
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
+    
+    def get_output_directory(self) -> str:
+        """Get the current output directory path."""
+        return self.output_directory
     
     def generate_portfolio_comparison_chart(self, results: RetirementResults) -> str:
         """
@@ -95,7 +101,7 @@ class ChartGenerator:
         plt.tight_layout()
         
         # Save chart
-        filename = f"portfolio_comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+        filename = "portfolio_comparison.png"
         filepath = os.path.join(self.output_directory, filename)
         plt.savefig(filepath, dpi=300, bbox_inches='tight')
         plt.close()
@@ -183,7 +189,7 @@ class ChartGenerator:
         
         # Save chart
         safe_name = portfolio_name.replace('/', '_').replace(' ', '_')
-        filename = f"percentiles_{safe_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+        filename = f"percentiles_{safe_name}.png"
         filepath = os.path.join(self.output_directory, filename)
         plt.savefig(filepath, dpi=300, bbox_inches='tight')
         plt.close()
@@ -273,7 +279,7 @@ class ChartGenerator:
         plt.tight_layout()
         
         # Save chart
-        filename = f"savings_projection_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+        filename = "savings_projection.png"
         filepath = os.path.join(self.output_directory, filename)
         plt.savefig(filepath, dpi=300, bbox_inches='tight')
         plt.close()
