@@ -69,7 +69,21 @@ class MonteCarloSimulator:
             user_input, allocation, years_to_retirement
         )
         
-        # Calculate required gross withdrawal for desired net income
+        # v1.1.0: Account for cash buffer
+        # Cash buffer is held separately from invested portfolio
+        cash_buffer_amount = user_input.cash_buffer_years * user_input.desired_annual_income
+        investable_portfolio = portfolio_value - cash_buffer_amount
+        
+        # Ensure we have enough for cash buffer
+        if investable_portfolio < 0:
+            # Not enough for cash buffer, use what we have
+            cash_buffer_amount = portfolio_value
+            investable_portfolio = 0
+        
+        # Start with investable portfolio value
+        portfolio_value = investable_portfolio
+        
+        # Calculate initial gross withdrawal (before state pension)
         gross_withdrawal = self.tax_calculator.calculate_gross_needed(
             user_input.desired_annual_income
         )
@@ -85,6 +99,12 @@ class MonteCarloSimulator:
         # Simulate retirement with guard rails
         portfolio_values = np.zeros(years_in_retirement + 1)
         portfolio_values[0] = portfolio_value
+        
+        # Track cash buffer separately
+        remaining_cash_buffer = cash_buffer_amount
+        
+        # Reset guard rails engine for new simulation
+        self.guard_rails_engine.ratcheted_base = None
         
         for year in range(years_in_retirement):
             # Start with current portfolio value
@@ -110,16 +130,47 @@ class MonteCarloSimulator:
                 
                 current_value *= (1 + portfolio_return)
             
+            # v1.1.0: Apply spending phases
+            spending_multiplier = 1.0
+            for phase_age, phase_mult in user_input.spending_phases:
+                if current_age >= phase_age:
+                    spending_multiplier = phase_mult
+            
+            # Calculate desired spending for this year
+            adjusted_desired_income = user_input.desired_annual_income * spending_multiplier
+            
+            # v1.1.0: Account for state pension
+            if current_age >= user_input.state_pension_age:
+                # State pension reduces needed withdrawal
+                net_income_needed = max(0, adjusted_desired_income - user_input.state_pension_amount)
+            else:
+                net_income_needed = adjusted_desired_income
+            
+            # Calculate gross withdrawal needed
+            if net_income_needed > 0:
+                gross_needed = self.tax_calculator.calculate_gross_needed(net_income_needed)
+            else:
+                gross_needed = 0
+            
             # Calculate withdrawal with guard rails (based on post-return value)
             withdrawal, _ = self.guard_rails_engine.calculate_withdrawal_adjustment(
-                current_value, portfolio_value, gross_withdrawal
+                current_value, portfolio_value, gross_needed,
+                current_year=year,
+                portfolio_return=portfolio_return
             )
+            
+            # v1.1.0: Use cash buffer first during market downturns
+            if portfolio_return < 0 and remaining_cash_buffer > 0:
+                # Use cash buffer to cover withdrawal
+                cash_used = min(withdrawal, remaining_cash_buffer)
+                remaining_cash_buffer -= cash_used
+                withdrawal -= cash_used  # Reduce portfolio withdrawal
             
             # Apply withdrawal after market return
             portfolio_values[year + 1] = max(0, current_value - withdrawal)
                 
-            # Check if portfolio depleted
-            if portfolio_values[year + 1] <= 0:
+            # Check if portfolio depleted (and cash buffer exhausted)
+            if portfolio_values[year + 1] <= 0 and remaining_cash_buffer <= 0:
                 return False, 0.0, portfolio_values
         
         # Success if portfolio has money at age 100
@@ -145,6 +196,15 @@ class MonteCarloSimulator:
         
         # Calculate portfolio growth with monthly contributions
         portfolio_value = user_input.current_savings
+        
+        # v1.1.0: Subtract cash buffer from current savings if it's being held separately
+        # This ensures we're only investing the investable portion
+        cash_buffer_amount = user_input.cash_buffer_years * user_input.desired_annual_income
+        if portfolio_value > cash_buffer_amount:
+            # We have enough for cash buffer, so separate it out
+            investable_amount = portfolio_value - cash_buffer_amount
+            portfolio_value = investable_amount
+        
         annual_contribution = user_input.monthly_savings * 12
         retirement_age = user_input.current_age + years_to_retirement
         
@@ -183,7 +243,10 @@ class MonteCarloSimulator:
             # Apply market return
             portfolio_value *= (1 + portfolio_return)
         
-        return portfolio_value
+        # v1.1.0: Add back the cash buffer to get total retirement assets
+        total_retirement_assets = portfolio_value + cash_buffer_amount
+        
+        return total_retirement_assets
     
     def run_simulation_for_retirement_age(self, user_input: UserInput,
                                         allocation: PortfolioAllocation,
