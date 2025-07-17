@@ -66,6 +66,10 @@ demo_*.py
 *_test.py
 *_demo.py
 !api/
+!data/
+!src/
+!templates/
+!static/
 
 # Development files
 *.md
