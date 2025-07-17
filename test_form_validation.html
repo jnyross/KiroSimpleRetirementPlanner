@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Validation Test - Retirement Calculator</title>
+    <link rel="stylesheet" href="static/css/form-validation.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>UK Retirement Calculator - Form Validation Test</h1>
+            <p>Test the form validation system</p>
+        </header>
+        
+        <main>
+            <form id="calculator-form" class="calculator-form">
+                <div class="form-group">
+                    <label for="current_age">
+                        Current Age
+                        <span class="tooltip">
+                            <span class="tooltip-text">Your current age (18-80 years)</span>
+                        </span>
+                    </label>
+                    <input type="number" id="current_age" name="current_age" min="18" max="80" required>
+                    <small class="help-text">Your current age (18-80 years)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="current_savings">
+                        Current Savings (£)
+                        <span class="tooltip">
+                            <span class="tooltip-text">Total retirement savings you have now (£0 or more)</span>
+                        </span>
+                    </label>
+                    <input type="number" id="current_savings" name="current_savings" min="0" step="1000" required>
+                    <small class="help-text">Total retirement savings you have now (£0 or more)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="monthly_savings">
+                        Monthly Savings (£)
+                        <span class="tooltip">
+                            <span class="tooltip-text">How much you save each month for retirement (£0 or more)</span>
+                        </span>
+                    </label>
+                    <input type="number" id="monthly_savings" name="monthly_savings" min="0" step="100" required>
+                    <small class="help-text">How much you save each month for retirement (£0 or more)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="desired_annual_income">
+                        Desired Annual Income (£)
+                        <span class="tooltip">
+                            <span class="tooltip-text">After-tax income you want in retirement (today's purchasing power)</span>
+                        </span>
+                    </label>
+                    <input type="number" id="desired_annual_income" name="desired_annual_income" min="1000" step="1000" required>
+                    <small class="help-text">After-tax income you want in retirement (today's purchasing power)</small>
+                </div>
+                
+                <button type="submit" class="calculate-btn">Calculate My Retirement</button>
+            </form>
+        </main>
+    </div>
+    
+    <script src="static/js/form-validation.js"></script>
+    
+    <script>
+        // Test script to demonstrate form validation
+        document.getElementById('calculator-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (window.calculatorFormValidator && window.calculatorFormValidator.isValid) {
+                const formData = window.calculatorFormValidator.getFormData();
+                console.log('Form submitted with data:', formData);
+                alert('Form is valid! Data: ' + JSON.stringify(formData, null, 2));
+            } else {
+                console.log('Form validation failed');
+                alert('Please correct the form errors before submitting.');
+            }
+        });
+    </script>
+</body>
+</html>
