@@ -126,6 +126,24 @@
                     </span>
                 </button>
             </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress-container" id="progress-container" style="display: none;">
+                <div class="progress-header">
+                    <h3>Calculating Your Retirement Options</h3>
+                    <p class="progress-description">Running Monte Carlo simulations across portfolio allocations...</p>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">0%</div>
+                </div>
+                <div class="progress-details">
+                    <p class="progress-status" id="progress-status">Initializing...</p>
+                    <p class="progress-portfolio" id="progress-portfolio">Preparing calculation engine...</p>
+                </div>
+            </div>
         </form>
         
         <div class="info-section">
@@ -161,10 +179,11 @@
             <table class="results-table">
                 <thead>
                     <tr>
-                        <th>Portfolio</th>
-                        <th>Retirement Age</th>
-                        <th>Success Rate</th>
-                        <th>Portfolio Value</th>
+                        <th class="portfolio-col">Portfolio</th>
+                        <th class="allocation-col">Allocation</th>
+                        <th class="age-col">Retirement Age</th>
+                        <th class="success-col">Success Rate</th>
+                        <th class="value-col">Portfolio Value</th>
                     </tr>
                 </thead>
                 <tbody id="results-tbody">

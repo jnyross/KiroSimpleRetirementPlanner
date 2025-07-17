@@ -26,6 +26,13 @@ class ResultsHandler {
         this.calculateBtn = document.getElementById('calculate-btn');
         this.modifyInputsBtn = document.getElementById('modify-inputs-btn');
         
+        // Progress bar elements
+        this.progressContainer = document.getElementById('progress-container');
+        this.progressFill = document.getElementById('progress-fill');
+        this.progressText = document.getElementById('progress-text');
+        this.progressStatus = document.getElementById('progress-status');
+        this.progressPortfolio = document.getElementById('progress-portfolio');
+        
         // Results section elements
         this.resultsSection = document.getElementById('results');
         this.recommendedPortfolio = document.getElementById('recommended-portfolio');
@@ -103,6 +110,7 @@ class ResultsHandler {
         
         try {
             this.setCalculatingState(true);
+            this.showProgressBar();
             
             // Get form data
             const formData = this.getFormData();
@@ -123,8 +131,15 @@ class ResultsHandler {
                 this.currentCharts = result.charts;
                 this.calculationId = result.calculation_id;
                 
+                // Final progress update
+                this.updateProgress(100, 'Complete', 'Preparing results...');
+                
+                // Small delay to show completion
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
                 this.displayResults(result);
                 this.showResults();
+                this.hideProgressBar();
                 
                 // Update browser history
                 history.pushState({ section: 'results' }, 'Results', '#results');
@@ -138,6 +153,7 @@ class ResultsHandler {
             this.handleCalculationError('Network error occurred. Please try again.');
         } finally {
             this.setCalculatingState(false);
+            this.hideProgressBar();
         }
     }
     
@@ -183,6 +199,104 @@ class ResultsHandler {
     }
     
     /**
+     * Show progress bar
+     */
+    showProgressBar() {
+        if (this.progressContainer) {
+            this.progressContainer.style.display = 'block';
+            this.updateProgress(0, 'Starting calculation...', 'Initializing Monte Carlo simulation...');
+            
+            // Start simulated progress updates
+            this.startProgressSimulation();
+        }
+    }
+    
+    /**
+     * Hide progress bar
+     */
+    hideProgressBar() {
+        if (this.progressContainer) {
+            this.progressContainer.style.display = 'none';
+        }
+        
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
+        }
+    }
+    
+    /**
+     * Update progress bar
+     */
+    updateProgress(percentage, status, portfolioInfo) {
+        if (this.progressFill) {
+            this.progressFill.style.width = `${percentage}%`;
+        }
+        
+        if (this.progressText) {
+            this.progressText.textContent = `${Math.round(percentage)}%`;
+        }
+        
+        if (this.progressStatus) {
+            this.progressStatus.textContent = status;
+        }
+        
+        if (this.progressPortfolio) {
+            this.progressPortfolio.textContent = portfolioInfo;
+        }
+    }
+    
+    /**
+     * Start progress simulation
+     */
+    startProgressSimulation() {
+        let progress = 0;
+        const portfolios = [
+            'Cash Only',
+            '100% Bonds',
+            '25% Equities/75% Bonds',
+            '50% Equities/50% Bonds',
+            '75% Equities/25% Bonds',
+            '100% Equities'
+        ];
+        
+        let currentPortfolio = 0;
+        
+        this.progressInterval = setInterval(() => {
+            progress += Math.random() * 15; // Random progress increment
+            
+            if (progress > 90) {
+                progress = 90; // Cap at 90% until real completion
+            }
+            
+            // Update current portfolio being processed
+            const portfolioIndex = Math.floor((progress / 90) * portfolios.length);
+            if (portfolioIndex < portfolios.length) {
+                currentPortfolio = portfolioIndex;
+            }
+            
+            let status = 'Running Monte Carlo simulations...';
+            if (progress > 80) {
+                status = 'Generating charts and analysis...';
+            } else if (progress > 50) {
+                status = 'Analyzing portfolio performance...';
+            }
+            
+            this.updateProgress(
+                progress,
+                status,
+                `Processing ${portfolios[currentPortfolio]} portfolio...`
+            );
+            
+            // Stop the simulation when we reach 90%
+            if (progress >= 90) {
+                clearInterval(this.progressInterval);
+                this.progressInterval = null;
+            }
+        }, 300); // Update every 300ms
+    }
+    
+    /**
      * Display calculation results
      */
     displayResults(result) {
@@ -190,7 +304,7 @@ class ResultsHandler {
         this.displayRecommendedPortfolio(result);
         
         // Display results table
-        this.displayResultsTable(result.results);
+        this.displayResultsTable(result.results, result.user_input.target_success_rate);
         
         // Setup chart selector and display first chart
         this.setupChartSelector(result.results, result.charts);
@@ -268,7 +382,7 @@ class ResultsHandler {
     /**
      * Display results table
      */
-    displayResultsTable(results) {
+    displayResultsTable(results, targetSuccessRate) {
         if (!this.resultsTableBody) return;
         
         // Clear existing rows
@@ -277,11 +391,11 @@ class ResultsHandler {
         // Sort results by retirement age (successful ones first, then by age)
         const sortedResults = [...results].sort((a, b) => {
             // Successful portfolios first
-            if (a.success_rate >= 0.99 && b.success_rate < 0.99) return -1;
-            if (b.success_rate >= 0.99 && a.success_rate < 0.99) return 1;
+            if (a.success_rate >= targetSuccessRate && b.success_rate < targetSuccessRate) return -1;
+            if (b.success_rate >= targetSuccessRate && a.success_rate < targetSuccessRate) return 1;
             
             // Among successful portfolios, sort by retirement age
-            if (a.success_rate >= 0.99 && b.success_rate >= 0.99) {
+            if (a.success_rate >= targetSuccessRate && b.success_rate >= targetSuccessRate) {
                 if (a.retirement_age === null) return 1;
                 if (b.retirement_age === null) return -1;
                 return a.retirement_age - b.retirement_age;
@@ -292,7 +406,7 @@ class ResultsHandler {
         });
         
         sortedResults.forEach((result, index) => {
-            const row = this.createResultRow(result, index === 0 && result.success_rate >= 0.99);
+            const row = this.createResultRow(result, index === 0 && result.success_rate >= targetSuccessRate);
             this.resultsTableBody.appendChild(row);
         });
     }

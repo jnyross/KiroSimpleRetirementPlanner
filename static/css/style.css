@@ -715,6 +715,127 @@ body {
     transform: none !important;
 }
 
+/* Progress Bar Styles */
+.progress-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e9ecef;
+}
+
+.progress-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.progress-header h3 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.progress-description {
+    color: #6c757d;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.progress-bar-container {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background: #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    position: absolute;
+    top: -30px;
+    right: 0;
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.progress-details {
+    text-align: center;
+}
+
+.progress-status {
+    font-size: 1.1rem;
+    color: #495057;
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+}
+
+.progress-portfolio {
+    font-size: 0.95rem;
+    color: #6c757d;
+    margin: 0;
+    font-style: italic;
+}
+
+/* Progress Bar Animation */
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Mobile responsive for progress bar */
+@media (max-width: 768px) {
+    .progress-container {
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+    
+    .progress-header h3 {
+        font-size: 1.3rem;
+    }
+    
+    .progress-description {
+        font-size: 0.9rem;
+    }
+    
+    .progress-bar {
+        height: 10px;
+    }
+    
+    .progress-text {
+        font-size: 0.8rem;
+    }
+}
+
 /* Results enhancements */
 .results-section {
     animation: fadeIn 0.5s ease-in-out;
