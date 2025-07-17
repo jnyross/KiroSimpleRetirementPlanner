@@ -65,6 +65,7 @@ main.py
 demo_*.py
 *_test.py
 *_demo.py
+!api/
 
 # Development files
 *.md
