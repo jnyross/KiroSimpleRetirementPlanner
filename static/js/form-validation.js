@@ -86,6 +86,21 @@ class FormValidator {
                     max: 'Annual income must be £500,000 or less',
                     invalid: 'Please enter a valid income amount'
                 }
+            },
+            target_success_rate: {
+                element: this.form.querySelector('#target_success_rate'),
+                rules: {
+                    required: true,
+                    min: 50,
+                    max: 100,
+                    type: 'integer'
+                },
+                messages: {
+                    required: 'Target success rate is required',
+                    min: 'Success rate must be at least 50%',
+                    max: 'Success rate must be 100% or less',
+                    invalid: 'Please enter a valid success rate'
+                }
             }
         };
     }

@@ -82,6 +82,20 @@ class CalculatorForm(Form):
         description="After-tax income you want in retirement (today's purchasing power)"
     )
     
+    target_success_rate = IntegerField(
+        'Target Success Rate (%)',
+        [
+            validators.DataRequired(message="Target success rate is required"),
+            validators.NumberRange(
+                min=50, 
+                max=100,
+                message="Success rate must be between 50% and 100%"
+            )
+        ],
+        description="Probability your money will last until age 100 (95% = conservative, 85% = aggressive)",
+        default=95
+    )
+    
     def validate_monthly_savings(self, field):
         """
         Custom validation to ensure monthly savings are reasonable.
@@ -139,11 +153,15 @@ class CalculatorForm(Form):
         if not self.validate():
             raise ValueError("Form validation failed")
         
+        # Convert percentage to decimal (e.g., 95 -> 0.95)
+        target_success_rate = self.target_success_rate.data / 100.0
+        
         return UserInput(
             current_age=self.current_age.data,
             current_savings=self.current_savings.data,
             monthly_savings=self.monthly_savings.data,
-            desired_annual_income=self.desired_annual_income.data
+            desired_annual_income=self.desired_annual_income.data,
+            target_success_rate=target_success_rate
         )
     
     def get_validation_errors(self):
@@ -170,5 +188,6 @@ class CalculatorForm(Form):
             'current_age': self.current_age.description,
             'current_savings': self.current_savings.description,
             'monthly_savings': self.monthly_savings.description,
-            'desired_annual_income': self.desired_annual_income.description
+            'desired_annual_income': self.desired_annual_income.description,
+            'target_success_rate': self.target_success_rate.description
         }

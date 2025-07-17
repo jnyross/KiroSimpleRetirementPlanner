@@ -159,7 +159,7 @@ def calculate():
                 optimal_age = simulator.find_optimal_retirement_age(
                     user_input, 
                     allocation, 
-                    target_success_rate=0.99,  # 99% confidence as per requirements
+                    target_success_rate=user_input.target_success_rate,
                     show_progress=False
                 )
                 
@@ -229,8 +229,8 @@ def calculate():
                 
                 results.append(result_data)
         
-        # Find recommended portfolio (earliest retirement with 99% confidence)
-        successful_results = [r for r in results if r['success_rate'] >= 0.99 and r['retirement_age'] is not None]
+        # Find recommended portfolio (earliest retirement with target success rate)
+        successful_results = [r for r in results if r['success_rate'] >= user_input.target_success_rate and r['retirement_age'] is not None]
         
         if successful_results:
             recommended = min(successful_results, key=lambda x: x['retirement_age'])
@@ -289,7 +289,8 @@ def calculate():
                 'current_age': user_input.current_age,
                 'current_savings': user_input.current_savings,
                 'monthly_savings': user_input.monthly_savings,
-                'desired_annual_income': user_input.desired_annual_income
+                'desired_annual_income': user_input.desired_annual_income,
+                'target_success_rate': user_input.target_success_rate
             },
             'results': results,
             'recommended_portfolio': recommended_portfolio,
