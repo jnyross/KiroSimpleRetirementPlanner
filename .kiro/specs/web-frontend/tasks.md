@@ -13,21 +13,21 @@
   - Create form error display and user guidance system
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 3. Build responsive HTML templates and CSS styling
+- [x] 3. Build responsive HTML templates and CSS styling
   - Create base.html template with mobile-first responsive layout
   - Implement index.html with calculator form and help text
   - Build CSS Grid/Flexbox layout with professional styling
   - Add mobile-responsive design for all screen sizes
   - _Requirements: 1.3, 8.1, 8.2, 8.4_
 
-- [ ] 4. Integrate existing calculation engine with web routes
+- [x] 4. Integrate existing calculation engine with web routes
   - Create routes.py with Flask blueprint for calculator endpoints
   - Import and integrate existing CLI modules (simulator, tax_calculator, etc.)
   - Implement /calculate POST endpoint that reuses existing Monte Carlo logic
   - Add progress tracking and loading states for calculations
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.2_
 
-- [ ] 5. Implement web-specific chart generation with Plotly
+- [x] 5. Implement web-specific chart generation with Plotly
   - Create chart_generator.py for interactive Plotly charts
   - Generate JSON chart data for 10th, 50th, 90th percentile visualizations
   - Add chart selector for switching between portfolio allocations

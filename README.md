@@ -1108,6 +1108,81 @@ This project is designed as a simple, effective retirement planning tool for edu
 **Last Updated**: January 2025  
 **Compatibility**: Python 3.8+, UK tax system 2024/25  
 
+## Web Interface
+
+In addition to the command-line interface, the tool now includes a modern web application that provides the same powerful retirement planning capabilities through an intuitive browser interface.
+
+### Web Application Features
+
+- **Interactive Form**: User-friendly web form with real-time validation
+- **Dynamic Charts**: Interactive Plotly.js visualizations that update with your data
+- **Scenario Management**: Save and compare multiple retirement scenarios
+- **Mobile Responsive**: Works seamlessly on desktop, tablet, and mobile devices
+- **Progress Tracking**: Real-time progress indicators for calculations
+- **Results Export**: Download results as JSON or print professional reports
+- **Quick Edit**: Modify inputs and recalculate without starting over
+
+### Accessing the Web Interface
+
+#### Local Development
+```bash
+# Start the web application
+python app.py
+
+# Open your browser to:
+http://localhost:5000
+```
+
+#### Production Deployment
+The web application is configured for deployment on Vercel:
+- **Main Application**: Access the calculator form
+- **Results Page**: View detailed analysis and interactive charts
+- **Deployment Status**: `/deployment-status` for system health monitoring
+
+### Web Interface Components
+
+#### Calculator Form (`/`)
+- **Input Validation**: Real-time validation with helpful error messages
+- **Progress Indicators**: Shows calculation progress during processing
+- **Mobile Optimized**: Responsive design for all screen sizes
+
+#### Results Display (`/results`)
+- **Portfolio Comparison**: Interactive table showing all portfolio allocations
+- **Interactive Charts**: Plotly.js charts with zoom, pan, and export capabilities
+- **Scenario Management**: Save current scenario and compare with previous calculations
+- **Quick Edit**: Modify inputs without losing current results
+
+#### API Endpoints
+- `POST /calculate` - Run retirement calculations
+- `GET /health` - System health check
+- `GET /deployment-status` - Detailed system status
+- `POST /api/quick-test` - Quick system verification
+
+### Technology Stack
+
+- **Backend**: Flask 2.3.3 (Python web framework)
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Charts**: Plotly.js for interactive visualizations
+- **Forms**: WTForms for server-side validation
+- **Deployment**: Vercel (serverless platform)
+
+### Configuration
+
+The web application uses the same calculation engine as the CLI tool but adds:
+- **Session Management**: Tracks calculation progress across requests
+- **Chart Generation**: Creates interactive web-ready visualizations
+- **Form Handling**: Validates and processes user inputs
+- **Error Handling**: User-friendly error messages and recovery
+
+### Deployment
+
+The web application is configured for Vercel deployment:
+- **Build Configuration**: `vercel.json` defines build settings
+- **Environment Variables**: Automatically configured for production
+- **Performance**: Optimized for 1024MB memory, 30-second timeout
+- **Monitoring**: Built-in health checks and status pages
+
 ### Changelog
+- **v1.1.0**: Added web interface with interactive charts and scenario management
 - **v1.0.1**: Added user-selectable success rate feature (50-100%)
 - **v1.0.0**: Initial release with dynamic glide path and chart organization

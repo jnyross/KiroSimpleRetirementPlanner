@@ -23,15 +23,9 @@ def create_app():
         DEBUG=os.environ.get('FLASK_ENV') != 'production'
     )
     
-    # Register routes (will be added in later tasks)
-    @app.route('/')
-    def index():
-        return "Retirement Calculator Web App - Coming Soon!"
-    
-    # Health check endpoint for Vercel
-    @app.route('/health')
-    def health():
-        return {'status': 'healthy', 'service': 'retirement-calculator-web'}
+    # Register calculator routes blueprint
+    from routes import calculator_routes
+    app.register_blueprint(calculator_routes)
     
     return app
 

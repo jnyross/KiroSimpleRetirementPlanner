@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}Deployment Status - Kiro Simple Retirement Planner{% endblock %}
+
+{% block content %}
+<div class="deployment-status-container">
+    <div class="status-header">
+        <h1>🚀 Deployment Status</h1>
+        <p>Current deployment information and system health</p>
+    </div>
+    
+    <div class="status-grid">
+        <div class="status-card">
+            <h3>🌐 Application Status</h3>
+            <div class="status-indicator status-healthy">
+                <span class="indicator-dot"></span>
+                <span>Healthy</span>
+            </div>
+            <div class="status-details">
+                <div class="detail-item">
+                    <span class="detail-label">Environment:</span>
+                    <span class="detail-value">{{ env_info.environment }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Python Version:</span>
+                    <span class="detail-value">{{ env_info.python_version }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Flask Version:</span>
+                    <span class="detail-value">{{ env_info.flask_version }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-card">
+            <h3>📊 Calculator Engine</h3>
+            <div class="status-indicator status-healthy">
+                <span class="indicator-dot"></span>
+                <span>Ready</span>
+            </div>
+            <div class="status-details">
+                <div class="detail-item">
+                    <span class="detail-label">Data Files:</span>
+                    <span class="detail-value">{{ engine_info.data_files_count }} files</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Portfolio Types:</span>
+                    <span class="detail-value">{{ engine_info.portfolio_count }} portfolios</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Last Test:</span>
+                    <span class="detail-value">{{ engine_info.last_test_time }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-card">
+            <h3>🔧 System Resources</h3>
+            <div class="status-indicator status-healthy">
+                <span class="indicator-dot"></span>
+                <span>Normal</span>
+            </div>
+            <div class="status-details">
+                <div class="detail-item">
+                    <span class="detail-label">Memory Usage:</span>
+                    <span class="detail-value">{{ system_info.memory_usage }}%</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Uptime:</span>
+                    <span class="detail-value">{{ system_info.uptime }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Region:</span>
+                    <span class="detail-value">{{ system_info.region }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-card">
+            <h3>🧪 Quick Test</h3>
+            <div class="test-actions">
+                <button type="button" class="btn btn-primary" id="run-test-btn">
+                    <span class="btn-text">Run Quick Test</span>
+                    <span class="btn-loading" style="display: none;">
+                        <span class="spinner"></span>
+                        Testing...
+                    </span>
+                </button>
+                <div id="test-results" class="test-results" style="display: none;">
+                    <!-- Test results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="deployment-info">
+        <h3>📋 Deployment Information</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Deployment ID:</span>
+                <span class="info-value">{{ deployment_info.deployment_id }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Build Time:</span>
+                <span class="info-value">{{ deployment_info.build_time }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Git Commit:</span>
+                <span class="info-value">{{ deployment_info.git_commit }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Version:</span>
+                <span class="info-value">{{ deployment_info.version }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="actions">
+        <a href="/" class="btn btn-secondary">← Back to Calculator</a>
+        <button type="button" class="btn btn-primary" id="refresh-status-btn">
+            <span class="btn-icon">🔄</span>
+            Refresh Status
+        </button>
+    </div>
+</div>
+
+<style>
+.deployment-status-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.status-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.status-header h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.status-header p {
+    color: #7f8c8d;
+    margin: 0;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.status-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+}
+
+.status-card h3 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.indicator-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #27ae60;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-healthy {
+    color: #27ae60;
+}
+
+.status-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.detail-label {
+    color: #7f8c8d;
+    font-size: 0.875rem;
+}
+
+.detail-value {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.test-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.test-results {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+}
+
+.deployment-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.deployment-info h3 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+}
+
+.info-label {
+    color: #7f8c8d;
+    font-size: 0.875rem;
+}
+
+.info-value {
+    font-weight: 500;
+    color: #2c3e50;
+    font-family: monospace;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .deployment-status-container {
+        padding: 1rem;
+    }
+    
+    .status-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const runTestBtn = document.getElementById('run-test-btn');
+    const testResults = document.getElementById('test-results');
+    const refreshStatusBtn = document.getElementById('refresh-status-btn');
+    
+    if (runTestBtn) {
+        runTestBtn.addEventListener('click', async function() {
+            const btnText = runTestBtn.querySelector('.btn-text');
+            const btnLoading = runTestBtn.querySelector('.btn-loading');
+            
+            // Set loading state
+            runTestBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'flex';
+            
+            try {
+                const response = await fetch('/api/quick-test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        current_age: 35,
+                        current_savings: 50000,
+                        monthly_savings: 500,
+                        desired_annual_income: 40000
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    testResults.textContent = `✅ Test passed in ${result.calculation_time}s
+Recommended: ${result.recommended_portfolio}
+Retirement Age: ${result.recommended_age}
+Portfolios tested: ${result.total_portfolios}`;
+                    testResults.style.color = '#27ae60';
+                } else {
+                    testResults.textContent = `❌ Test failed: ${result.error}`;
+                    testResults.style.color = '#e74c3c';
+                }
+                
+                testResults.style.display = 'block';
+                
+            } catch (error) {
+                testResults.textContent = `❌ Network error: ${error.message}`;
+                testResults.style.color = '#e74c3c';
+                testResults.style.display = 'block';
+            } finally {
+                // Reset loading state
+                runTestBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+            }
+        });
+    }
+    
+    if (refreshStatusBtn) {
+        refreshStatusBtn.addEventListener('click', function() {
+            location.reload();
+        });
+    }
+});
+</script>
+{% endblock %}

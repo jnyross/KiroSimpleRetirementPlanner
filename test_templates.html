@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="UK Retirement Calculator - Plan your retirement with confidence using historical market data">
+    <title>UK Retirement Calculator</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="static/css/style.css">
+    
+    <!-- Plotly.js for charts -->
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="header__title">UK Retirement Calculator</h1>
+            <p class="header__subtitle">Plan your retirement with confidence using historical market data</p>
+        </header>
+        
+        <main class="main">
+            <section class="input-section">
+                <div class="form-container">
+                    <h2 class="section-title">Calculate Your Retirement</h2>
+                    <p class="section-description">
+                        Enter your financial information below to see when you can retire with confidence.
+                        All calculations use historical UK market data and account for inflation and taxes.
+                    </p>
+                    
+                    <form id="calculator-form" class="calculator-form" novalidate>
+                        <div class="form-group">
+                            <label for="current_age" class="form-label">
+                                Current Age
+                                <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                id="current_age" 
+                                name="current_age" 
+                                class="form-input"
+                                min="18" 
+                                max="80" 
+                                required
+                                aria-describedby="current_age_help current_age_error"
+                            >
+                            <small id="current_age_help" class="help-text">
+                                Your age today (18-80 years)
+                            </small>
+                            <div id="current_age_error" class="error-message" role="alert"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="current_savings" class="form-label">
+                                Current Savings (£)
+                                <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                id="current_savings" 
+                                name="current_savings" 
+                                class="form-input"
+                                min="0" 
+                                step="1000" 
+                                required
+                                aria-describedby="current_savings_help current_savings_error"
+                            >
+                            <small id="current_savings_help" class="help-text">
+                                Total retirement savings you have now (pensions, ISAs, etc.)
+                            </small>
+                            <div id="current_savings_error" class="error-message" role="alert"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="monthly_savings" class="form-label">
+                                Monthly Savings (£)
+                                <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                id="monthly_savings" 
+                                name="monthly_savings" 
+                                class="form-input"
+                                min="0" 
+                                step="100" 
+                                required
+                                aria-describedby="monthly_savings_help monthly_savings_error"
+                            >
+                            <small id="monthly_savings_help" class="help-text">
+                                How much you save each month for retirement
+                            </small>
+                            <div id="monthly_savings_error" class="error-message" role="alert"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="desired_annual_income" class="form-label">
+                                Desired Annual Income (£)
+                                <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                id="desired_annual_income" 
+                                name="desired_annual_income" 
+                                class="form-input"
+                                min="1000" 
+                                step="1000" 
+                                required
+                                aria-describedby="desired_annual_income_help desired_annual_income_error"
+                            >
+                            <small id="desired_annual_income_help" class="help-text">
+                                After-tax income you want in retirement (in today's money)
+                            </small>
+                            <div id="desired_annual_income_error" class="error-message" role="alert"></div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="calculate-btn" id="calculate-btn">
+                                <span class="btn-text">Calculate My Retirement</span>
+                                <span class="btn-loading" style="display: none;">
+                                    <span class="spinner"></span>
+                                    Calculating...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="info-section">
+                        <h3>How It Works</h3>
+                        <ul class="info-list">
+                            <li>Uses historical UK stock and bond market data since 1900</li>
+                            <li>Runs 10,000+ Monte Carlo simulations for each portfolio</li>
+                            <li>Accounts for UK taxes on pension withdrawals</li>
+                            <li>Includes dynamic spending adjustments (guard rails)</li>
+                            <li>Shows results with 99% confidence of not running out of money</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="results-section" id="results">
+                <div class="results-container">
+                    <h2 class="section-title">Your Retirement Options</h2>
+                    
+                    <div class="recommended-portfolio" id="recommended-portfolio">
+                        <div class="recommendation-card">
+                            <h3 class="recommendation-title">
+                                Recommended: <span id="recommended-name" class="portfolio-name">Balanced Portfolio</span>
+                            </h3>
+                            <p class="recommendation-summary">
+                                Retire at age <strong id="recommended-age" class="highlight-age">65</strong> 
+                                with <strong id="recommended-success" class="highlight-success">99%</strong> confidence
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="results-table-container">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Portfolio</th>
+                                    <th>Retirement Age</th>
+                                    <th>Success Rate</th>
+                                    <th>Portfolio Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-tbody">
+                                <tr class="recommended-row">
+                                    <td>Balanced Portfolio</td>
+                                    <td>65</td>
+                                    <td>99%</td>
+                                    <td>£450,000</td>
+                                </tr>
+                                <tr>
+                                    <td>Conservative Portfolio</td>
+                                    <td>67</td>
+                                    <td>99%</td>
+                                    <td>£380,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="charts-section">
+                        <div class="chart-controls">
+                            <label for="portfolio-select" class="chart-label">View Portfolio Projection:</label>
+                            <select id="portfolio-select" class="chart-select">
+                                <option>Balanced Portfolio</option>
+                                <option>Conservative Portfolio</option>
+                            </select>
+                        </div>
+                        <div id="chart-display" class="chart-container">
+                            <p style="text-align: center; color: #7f8c8d; padding: 2rem;">Chart will be displayed here</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="secondary-btn" id="modify-inputs-btn">
+                            Modify Inputs
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2025 UK Retirement Calculator. Based on historical UK market data.</p>
+        </footer>
+    </div>
+</body>
+</html>

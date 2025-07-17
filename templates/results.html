@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Retirement Calculation Results - UK Retirement Calculator{% endblock %}
+
+{% block content %}
+<section class="results-section" id="results">
+    <div class="results-container">
+        <div class="results-header">
+            <h2 class="section-title">Your Retirement Options</h2>
+            <p class="results-description">
+                Based on your inputs, here are your retirement projections using historical UK market data.
+                All calculations include UK taxes and dynamic spending adjustments.
+            </p>
+        </div>
+        
+        <!-- Recommended Portfolio Section -->
+        <div class="recommended-portfolio" id="recommended-portfolio">
+            <div class="recommendation-card" id="recommendation-card">
+                <div class="recommendation-icon">
+                    <span class="star-icon">★</span>
+                </div>
+                <div class="recommendation-content">
+                    <h3 class="recommendation-title">
+                        Recommended: <span id="recommended-name" class="portfolio-name"></span>
+                    </h3>
+                    <p class="recommendation-summary">
+                        You can retire at age <strong id="recommended-age" class="highlight-age"></strong> 
+                        with <strong id="recommended-success" class="highlight-success"></strong> confidence
+                    </p>
+                    <div class="recommendation-details" id="recommendation-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Portfolio Value at Retirement:</span>
+                            <span id="recommended-value" class="detail-value"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Years to Retirement:</span>
+                            <span id="recommended-years" class="detail-value"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- No Recommendation Card (hidden by default) -->
+            <div class="recommendation-card no-recommendation" id="no-recommendation-card" style="display: none;">
+                <div class="recommendation-icon">
+                    <span class="warning-icon">⚠</span>
+                </div>
+                <div class="recommendation-content">
+                    <h3 class="recommendation-title">No Portfolio Achieves 99% Confidence</h3>
+                    <p class="recommendation-summary">
+                        Based on your current savings and goals, none of the portfolios can provide 
+                        99% confidence of not running out of money by age 100.
+                    </p>
+                    <div class="recommendation-suggestions">
+                        <p><strong>Consider:</strong></p>
+                        <ul>
+                            <li>Increasing your monthly savings</li>
+                            <li>Reducing your desired retirement income</li>
+                            <li>Planning to retire at a later age</li>
+                            <li>Accepting a lower confidence level (90-95%)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Table Section -->
+        <div class="results-table-section">
+            <h3 class="subsection-title">All Portfolio Options</h3>
+            <p class="subsection-description">
+                Compare all portfolio allocations to see how different investment strategies affect your retirement timeline.
+            </p>
+            
+            <div class="results-table-container">
+                <table class="results-table" id="results-table">
+                    <thead>
+                        <tr>
+                            <th class="portfolio-col">Portfolio</th>
+                            <th class="allocation-col">Allocation</th>
+                            <th class="age-col">Retirement Age</th>
+                            <th class="success-col">Success Rate</th>
+                            <th class="value-col">Portfolio Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                        <!-- Results populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-legend">
+                <div class="legend-item">
+                    <span class="legend-color recommended"></span>
+                    <span class="legend-text">Recommended portfolio (earliest retirement with 99% confidence)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color successful"></span>
+                    <span class="legend-text">Achieves 99% confidence</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color unsuccessful"></span>
+                    <span class="legend-text">Below 99% confidence</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <h3 class="subsection-title">Portfolio Projections</h3>
+            <p class="subsection-description">
+                Interactive charts showing how your portfolio might grow over time. 
+                The shaded area represents the range between 10th and 90th percentiles.
+            </p>
+            
+            <div class="chart-controls">
+                <div class="chart-selector-group">
+                    <label for="portfolio-select" class="chart-label">View Portfolio:</label>
+                    <select id="portfolio-select" class="chart-select">
+                        <!-- Options populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="chart-actions">
+                    <button type="button" class="chart-btn" id="fullscreen-chart-btn" title="View chart in fullscreen">
+                        <span class="btn-icon">⛶</span>
+                        Fullscreen
+                    </button>
+                    <button type="button" class="chart-btn" id="download-chart-btn" title="Download chart as image">
+                        <span class="btn-icon">↓</span>
+                        Download
+                    </button>
+                </div>
+            </div>
+            
+            <div class="chart-container" id="chart-container">
+                <div id="chart-display" class="chart-display">
+                    <!-- Chart populated by JavaScript -->
+                </div>
+                
+                <div class="chart-loading" id="chart-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Loading chart...</p>
+                </div>
+                
+                <div class="chart-error" id="chart-error" style="display: none;">
+                    <p>Unable to load chart. Please try refreshing the page.</p>
+                </div>
+            </div>
+            
+            <div class="chart-legend">
+                <div class="chart-legend-item">
+                    <span class="legend-line median"></span>
+                    <span class="legend-text">Median projection (50th percentile)</span>
+                </div>
+                <div class="chart-legend-item">
+                    <span class="legend-area range"></span>
+                    <span class="legend-text">Likely range (10th to 90th percentile)</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="results-actions">
+            <button type="button" class="primary-btn" id="modify-inputs-btn">
+                <span class="btn-icon">✎</span>
+                Modify Inputs & Recalculate
+            </button>
+            
+            <button type="button" class="secondary-btn" id="save-results-btn">
+                <span class="btn-icon">💾</span>
+                Save Results
+            </button>
+            
+            <button type="button" class="secondary-btn" id="print-results-btn">
+                <span class="btn-icon">🖨</span>
+                Print Results
+            </button>
+        </div>
+        
+        <!-- Input Summary -->
+        <div class="input-summary" id="input-summary">
+            <h4 class="summary-title">Your Inputs</h4>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">Current Age:</span>
+                    <span id="summary-age" class="summary-value"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Current Savings:</span>
+                    <span id="summary-savings" class="summary-value"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Monthly Savings:</span>
+                    <span id="summary-monthly" class="summary-value"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Desired Income:</span>
+                    <span id="summary-income" class="summary-value"></span>
+                </div>
+            </div>
+            <div class="input-actions">
+                <button type="button" class="btn btn-primary" id="modify-inputs-btn">
+                    <span class="btn-icon">✏️</span>
+                    Modify Inputs
+                </button>
+                <button type="button" class="btn btn-secondary" id="quick-edit-btn">
+                    <span class="btn-icon">⚡</span>
+                    Quick Edit
+                </button>
+            </div>
+        </div>
+        
+        <!-- Quick Edit Modal -->
+        <div class="quick-edit-modal" id="quick-edit-modal" style="display: none;">
+            <div class="modal-overlay" id="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4>Quick Edit Inputs</h4>
+                    <button type="button" class="btn-close" id="close-quick-edit">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="quick-edit-form">
+                        <div class="form-group">
+                            <label for="quick-current-age">Current Age:</label>
+                            <input type="number" id="quick-current-age" name="current_age" min="18" max="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="quick-current-savings">Current Savings (£):</label>
+                            <input type="number" id="quick-current-savings" name="current_savings" min="0" step="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="quick-monthly-savings">Monthly Savings (£):</label>
+                            <input type="number" id="quick-monthly-savings" name="monthly_savings" min="0" step="50" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="quick-desired-income">Desired Annual Income (£):</label>
+                            <input type="number" id="quick-desired-income" name="desired_annual_income" min="0" step="1000" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="quick-edit-submit">
+                                <span class="btn-text">Recalculate</span>
+                                <span class="btn-loading" style="display: none;">
+                                    <span class="spinner"></span>
+                                    Calculating...
+                                </span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="cancel-quick-edit">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scenario Comparison -->
+        <div class="scenario-comparison" id="scenario-comparison">
+            <h3>Scenario Comparison</h3>
+            <div class="comparison-controls">
+                <div class="comparison-actions">
+                    <button type="button" class="btn btn-secondary" id="save-scenario-btn">
+                        <span class="btn-icon">💾</span>
+                        Save Current Scenario
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="load-scenario-btn">
+                        <span class="btn-icon">📁</span>
+                        Load Scenario
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="compare-scenarios-btn">
+                        <span class="btn-icon">⚖️</span>
+                        Compare Scenarios
+                    </button>
+                </div>
+                <div class="saved-scenarios" id="saved-scenarios">
+                    <div class="scenario-list" id="scenario-list">
+                        <!-- Saved scenarios will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Scenario comparison chart -->
+            <div class="comparison-chart-container" id="comparison-chart-container" style="display: none;">
+                <div class="chart-header">
+                    <h4>Scenario Comparison</h4>
+                    <button type="button" class="btn btn-sm btn-secondary" id="close-comparison-btn">
+                        <span class="btn-icon">✕</span>
+                        Close
+                    </button>
+                </div>
+                <div class="comparison-chart" id="comparison-chart"></div>
+            </div>
+        </div>
+
+        <!-- Calculation Details -->
+        <div class="calculation-details" id="calculation-details">
+            <details class="details-section">
+                <summary class="details-title">Calculation Details</summary>
+                <div class="details-content">
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Calculation Time:</span>
+                            <span id="calc-time" class="detail-value"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Simulations per Portfolio:</span>
+                            <span class="detail-value">2,000</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Historical Data Period:</span>
+                            <span class="detail-value">1900-2023</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tax Calculations:</span>
+                            <span class="detail-value">UK Income Tax & NI</span>
+                        </div>
+                    </div>
+                    
+                    <div class="methodology-info">
+                        <h5>Methodology</h5>
+                        <ul>
+                            <li>Monte Carlo simulation using bootstrap sampling from historical UK market data</li>
+                            <li>Dynamic spending adjustments (guard rails) based on portfolio performance</li>
+                            <li>UK tax calculations applied to all retirement withdrawals</li>
+                            <li>All values shown in today's purchasing power (inflation-adjusted)</li>
+                            <li>Success rate = probability of not running out of money by age 100</li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize results display when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Results should be populated by the results handler
+    if (window.resultsHandler) {
+        // Results handler will populate the page
+        console.log('Results page initialized');
+    } else {
+        console.error('Results handler not found');
+    }
+});
+</script>
+{% endblock %}
