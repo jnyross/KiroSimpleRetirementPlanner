@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
+  "name": "kiro-simple-retirement-planner",
   "builds": [
     {
       "src": "app.py",
