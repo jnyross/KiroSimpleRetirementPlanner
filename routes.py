@@ -13,7 +13,6 @@ import time
 import uuid
 import os
 import sys
-import psutil
 import flask
 from datetime import datetime
 from typing import Dict, Any, Optional
@@ -430,23 +429,11 @@ def deployment_status():
             }
         
         # Get system information
-        try:
-            memory_info = psutil.virtual_memory()
-            memory_usage = round(memory_info.percent, 1)
-            uptime = datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
-            region = os.environ.get('VERCEL_REGION', 'local')
-            
-            system_info = {
-                'memory_usage': memory_usage,
-                'uptime': uptime,
-                'region': region
-            }
-        except Exception:
-            system_info = {
-                'memory_usage': 'N/A',
-                'uptime': 'N/A',
-                'region': 'local'
-            }
+        system_info = {
+            'memory_usage': 'N/A',  # psutil not available in Vercel
+            'uptime': datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
+            'region': os.environ.get('VERCEL_REGION', 'local')
+        }
         
         # Get deployment information
         deployment_info = {
