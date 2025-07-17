@@ -44,6 +44,21 @@ class RetirementCalculatorCLI:
         # Collect target success rate
         target_success_rate = self._prompt_for_success_rate()
         
+        # New v1.1.0: Ask about advanced features
+        click.echo("\n=== Advanced Options (v1.1.0) ===")
+        use_advanced = click.confirm("Would you like to configure advanced retirement features?", default=False)
+        
+        if use_advanced:
+            cash_buffer_years = self._prompt_for_cash_buffer()
+            state_pension_age, state_pension_amount = self._prompt_for_state_pension()
+            spending_phases = self._prompt_for_spending_phases(current_age)
+        else:
+            # Use defaults
+            cash_buffer_years = 2.0
+            state_pension_age = 67
+            state_pension_amount = 9110.0
+            spending_phases = [(75, 0.75)]
+        
         # Create and validate user input
         try:
             user_input = UserInput(
@@ -51,7 +66,11 @@ class RetirementCalculatorCLI:
                 current_savings=current_savings,
                 monthly_savings=monthly_savings,
                 desired_annual_income=desired_income,
-                target_success_rate=target_success_rate
+                target_success_rate=target_success_rate,
+                cash_buffer_years=cash_buffer_years,
+                state_pension_age=state_pension_age,
+                state_pension_amount=state_pension_amount,
+                spending_phases=spending_phases
             )
             
             # Display summary for confirmation
@@ -204,7 +223,7 @@ class RetirementCalculatorCLI:
                 rate = click.prompt(
                     "What success rate do you want to target? (50-100%)",
                     type=float,
-                    default=99.0,
+                    default=95.0,  # Updated default from 99% to 95% in v1.1.0
                     show_default=True
                 )
                 
@@ -236,6 +255,135 @@ class RetirementCalculatorCLI:
             except (ValueError, TypeError):
                 click.echo("❌ Please enter a valid percentage (e.g., 95 or 0.95)")
     
+    def _prompt_for_cash_buffer(self) -> float:
+        """Prompt for cash buffer years (v1.1.0)."""
+        while True:
+            try:
+                click.echo("\n💡 Cash buffer: Emergency fund held outside your investment portfolio")
+                click.echo("   This covers spending during market downturns without selling investments")
+                
+                years = click.prompt(
+                    "How many years of spending would you like in your cash buffer? (0-5)",
+                    type=float,
+                    default=2.0,
+                    show_default=True
+                )
+                
+                if 0 <= years <= 5:
+                    if years == 0:
+                        click.echo("⚠️  No cash buffer means you'll need to sell investments in down markets")
+                    elif years >= 3:
+                        click.echo("✅ Conservative cash buffer - good protection against market volatility")
+                    else:
+                        click.echo("✅ Standard cash buffer - balanced approach")
+                    return years
+                else:
+                    click.echo("❌ Cash buffer must be between 0 and 5 years")
+                    
+            except click.Abort:
+                click.echo("\n👋 Operation cancelled by user.")
+                sys.exit(0)
+            except (ValueError, TypeError):
+                click.echo("❌ Please enter a valid number (e.g., 2 or 2.5)")
+    
+    def _prompt_for_state_pension(self) -> Tuple[int, float]:
+        """Prompt for state pension details (v1.1.0)."""
+        # State pension age
+        while True:
+            try:
+                click.echo("\n💡 UK State Pension reduces the amount you need to withdraw from your portfolio")
+                
+                age = click.prompt(
+                    "At what age will you receive state pension?",
+                    type=int,
+                    default=67,
+                    show_default=True
+                )
+                
+                if 60 <= age <= 75:
+                    break
+                else:
+                    click.echo("❌ State pension age must be between 60 and 75")
+                    
+            except click.Abort:
+                click.echo("\n👋 Operation cancelled by user.")
+                sys.exit(0)
+            except (ValueError, TypeError):
+                click.echo("❌ Please enter a valid age (e.g., 67)")
+        
+        # State pension amount
+        while True:
+            try:
+                amount = click.prompt(
+                    "What annual state pension do you expect? (£)",
+                    type=float,
+                    default=9110.0,
+                    show_default=True
+                )
+                
+                if 0 <= amount <= 20000:
+                    if amount == 0:
+                        click.echo("⚠️  No state pension means higher portfolio withdrawals needed")
+                    elif amount < 5000:
+                        click.echo("💡 Partial state pension included")
+                    else:
+                        click.echo("✅ Full state pension included")
+                    return age, amount
+                else:
+                    click.echo("❌ State pension must be between £0 and £20,000")
+                    
+            except click.Abort:
+                click.echo("\n👋 Operation cancelled by user.")
+                sys.exit(0)
+            except (ValueError, TypeError):
+                click.echo("❌ Please enter a valid amount (e.g., 9110)")
+    
+    def _prompt_for_spending_phases(self, current_age: int) -> list:
+        """Prompt for spending phase configuration (v1.1.0)."""
+        click.echo("\n💡 Spending phases: Most retirees spend less as they age (travel less, etc.)")
+        
+        use_phases = click.confirm("Would you like to model reduced spending in later retirement?", default=True)
+        
+        if not use_phases:
+            return []
+        
+        phases = []
+        while True:
+            try:
+                age = click.prompt(
+                    "At what age would spending reduce?",
+                    type=int,
+                    default=75,
+                    show_default=True
+                )
+                
+                if current_age < age <= 100:
+                    multiplier = click.prompt(
+                        "What percentage of original spending? (e.g., 75 for 75%)",
+                        type=float,
+                        default=75.0,
+                        show_default=True
+                    )
+                    
+                    if 10 <= multiplier <= 100:
+                        phases.append((age, multiplier / 100.0))
+                        click.echo(f"✅ Spending will reduce to {multiplier:.0f}% at age {age}")
+                        
+                        if not click.confirm("Add another spending phase?", default=False):
+                            break
+                    else:
+                        click.echo("❌ Spending percentage must be between 10% and 100%")
+                else:
+                    click.echo(f"❌ Age must be between {current_age + 1} and 100")
+                    
+            except click.Abort:
+                click.echo("\n👋 Operation cancelled by user.")
+                sys.exit(0)
+            except (ValueError, TypeError):
+                click.echo("❌ Please enter valid values")
+        
+        return sorted(phases, key=lambda x: x[0])  # Sort by age
+    
     def _display_input_summary(self, user_input: UserInput):
         """Display a summary of user input for confirmation."""
         click.echo("\\n=== Input Summary ===")
@@ -252,6 +400,20 @@ class RetirementCalculatorCLI:
         click.echo(f"\\nCalculated Metrics:")
         click.echo(f"Annual Savings: £{annual_savings:,.2f}")
         click.echo(f"Savings Rate: {savings_rate:.1f}% of desired retirement income")
+        
+        # Show advanced settings if not using defaults
+        if (user_input.cash_buffer_years != 2.0 or 
+            user_input.state_pension_age != 67 or 
+            user_input.state_pension_amount != 9110.0 or
+            len(user_input.spending_phases) > 0):
+            click.echo(f"\\nAdvanced Settings (v1.1.0):")
+            click.echo(f"Cash Buffer: {user_input.cash_buffer_years:.1f} years")
+            click.echo(f"State Pension: £{user_input.state_pension_amount:,.0f} at age {user_input.state_pension_age}")
+            
+            if user_input.spending_phases:
+                click.echo("Spending Phases:")
+                for age, multiplier in user_input.spending_phases:
+                    click.echo(f"  - Age {age}: {multiplier:.0%} of original spending")
     
     def display_progress(self, message: str, step: int = 0, total: int = 0):
         """

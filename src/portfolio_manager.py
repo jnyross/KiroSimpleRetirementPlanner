@@ -7,7 +7,7 @@ portfolio returns based on historical data and allocation percentages.
 
 import numpy as np
 from typing import Dict, List
-from .models import PortfolioAllocation
+from .models import PortfolioAllocation, DynamicGlidePath, RisingGlidePath, TargetDateFund
 from .data_manager import HistoricalDataManager
 
 
@@ -30,19 +30,27 @@ class PortfolioManager:
         
     def _create_portfolio_allocations(self) -> Dict[str, PortfolioAllocation]:
         """
-        Create the 6 standard portfolio allocations.
+        Create the 9 standard portfolio allocations (expanded in v1.1.0).
         
         Returns:
             Dictionary mapping portfolio names to allocation objects
         """
-        allocations = {
-            "100% Cash": PortfolioAllocation("100% Cash", 0.0, 0.0, 1.0),
-            "100% Bonds": PortfolioAllocation("100% Bonds", 0.0, 1.0, 0.0),
-            "25% Equities/75% Bonds": PortfolioAllocation("25% Equities/75% Bonds", 0.25, 0.75, 0.0),
-            "50% Equities/50% Bonds": PortfolioAllocation("50% Equities/50% Bonds", 0.50, 0.50, 0.0),
-            "75% Equities/25% Bonds": PortfolioAllocation("75% Equities/25% Bonds", 0.75, 0.25, 0.0),
-            "100% Equities": PortfolioAllocation("100% Equities", 1.0, 0.0, 0.0)
-        }
+        # Create allocation instances
+        allocations_list = [
+            PortfolioAllocation("100% Cash", 0.0, 0.0, 1.0),
+            PortfolioAllocation("100% Bonds", 0.0, 1.0, 0.0),
+            PortfolioAllocation("25% Equities/75% Bonds", 0.25, 0.75, 0.0),
+            PortfolioAllocation("50% Equities/50% Bonds", 0.50, 0.50, 0.0),
+            PortfolioAllocation("75% Equities/25% Bonds", 0.75, 0.25, 0.0),
+            PortfolioAllocation("100% Equities", 1.0, 0.0, 0.0),
+            DynamicGlidePath(),  # Traditional decreasing glide path
+            RisingGlidePath(),   # New v1.1.0: Rising equity glide path
+            TargetDateFund()     # New v1.1.0: 120-age rule
+        ]
+        
+        # Convert to dictionary
+        allocations = {alloc.name: alloc for alloc in allocations_list}
+        
         return allocations
     
     def get_allocation(self, name: str) -> PortfolioAllocation:

@@ -21,17 +21,24 @@ class GuardRailsEngine:
             thresholds: Guard rails thresholds configuration
         """
         self.thresholds = thresholds or GuardRailsThresholds()
+        self.ratcheted_base = None  # Track ratcheted spending level
         
     def calculate_withdrawal_adjustment(self, current_portfolio_value: float,
                                       initial_portfolio_value: float,
-                                      base_withdrawal: float) -> Tuple[float, str]:
+                                      base_withdrawal: float,
+                                      current_year: int = 0,
+                                      portfolio_return: float = None) -> Tuple[float, str]:
         """
         Calculate withdrawal adjustment based on portfolio performance.
+        
+        Now supports Guyton-Klinger ratcheting and enhanced rules (v1.1.0).
         
         Args:
             current_portfolio_value: Current portfolio value
             initial_portfolio_value: Initial portfolio value at retirement
             base_withdrawal: Base withdrawal amount
+            current_year: Current year in retirement (for ratcheting)
+            portfolio_return: Portfolio return for current year (for capital preservation rule)
             
         Returns:
             Tuple of (adjusted_withdrawal, adjustment_reason)
@@ -39,24 +46,46 @@ class GuardRailsEngine:
         if initial_portfolio_value <= 0:
             return base_withdrawal, "normal"
         
+        # Initialize ratcheted base if needed
+        if self.ratcheted_base is None:
+            self.ratcheted_base = base_withdrawal
+        
+        # Use ratcheted base for calculations
+        working_withdrawal = self.ratcheted_base
+        
         # Calculate performance relative to initial value
         performance_ratio = current_portfolio_value / initial_portfolio_value
         
-        # Determine adjustment based on performance thresholds
-        if performance_ratio >= (1.0 + self.thresholds.upper_threshold):
-            # Above upper guard rail - allow normal spending
-            return base_withdrawal, "normal"
+        # Check for Guyton-Klinger ratcheting opportunity
+        if (self.thresholds.strategy == "guyton-klinger" and 
+            self.thresholds.enable_ratcheting and
+            performance_ratio >= (1.0 + self.thresholds.ratchet_threshold)):
+            # Ratchet up spending permanently
+            self.ratcheted_base *= (1.0 + self.thresholds.ratchet_increase)
+            working_withdrawal = self.ratcheted_base
+            adjustment_reason = "ratchet_increase"
+        
+        # Apply Guyton-Klinger capital preservation rule
+        elif (self.thresholds.strategy == "guyton-klinger" and 
+              portfolio_return is not None and 
+              portfolio_return < 0):
+            # Skip withdrawal increase in down years
+            adjustment_reason = "capital_preservation"
+        
+        # Standard guard rails adjustments
         elif performance_ratio <= (1.0 - self.thresholds.severe_threshold):
             # Below severe guard rail - reduce spending by 20%
-            adjusted_withdrawal = base_withdrawal * (1.0 - self.thresholds.severe_adjustment)
-            return adjusted_withdrawal, "severe_reduction"
+            working_withdrawal = self.ratcheted_base * (1.0 - self.thresholds.severe_adjustment)
+            adjustment_reason = "severe_reduction"
         elif performance_ratio <= (1.0 - self.thresholds.lower_threshold):
             # Below lower guard rail - reduce spending by 10%
-            adjusted_withdrawal = base_withdrawal * (1.0 - self.thresholds.lower_adjustment)
-            return adjusted_withdrawal, "lower_reduction"
+            working_withdrawal = self.ratcheted_base * (1.0 - self.thresholds.lower_adjustment)
+            adjustment_reason = "lower_reduction"
         else:
             # Within normal range
-            return base_withdrawal, "normal"
+            adjustment_reason = "normal"
+        
+        return working_withdrawal, adjustment_reason
     
     def simulate_withdrawal_sequence(self, portfolio_values: np.ndarray,
                                    initial_portfolio_value: float,
@@ -264,3 +293,38 @@ class GuardRailsEngine:
             raise ValueError("Invalid guard rails thresholds")
         
         self.thresholds = new_thresholds
+    
+    def calculate_vanguard_withdrawal(self, previous_withdrawal: float,
+                                    inflation_rate: float,
+                                    portfolio_performance: float) -> Tuple[float, str]:
+        """
+        Calculate withdrawal using Vanguard dynamic spending rule (v1.1.0).
+        
+        Formula: Previous withdrawal × (1 + inflation) × performance factor
+        Capped at +5% increase or -2.5% decrease annually.
+        
+        Args:
+            previous_withdrawal: Previous year's withdrawal
+            inflation_rate: Current inflation rate
+            portfolio_performance: Portfolio performance ratio
+            
+        Returns:
+            Tuple of (adjusted_withdrawal, adjustment_reason)
+        """
+        # Adjust for inflation
+        inflation_adjusted = previous_withdrawal * (1 + inflation_rate)
+        
+        # Calculate performance factor
+        if portfolio_performance > 1.05:
+            factor = 1.05  # Cap at 5% increase
+            reason = "vanguard_capped_increase"
+        elif portfolio_performance < 0.975:
+            factor = 0.975  # Floor at 2.5% decrease
+            reason = "vanguard_capped_decrease"
+        else:
+            factor = portfolio_performance
+            reason = "vanguard_normal"
+        
+        adjusted_withdrawal = inflation_adjusted * factor
+        
+        return adjusted_withdrawal, reason

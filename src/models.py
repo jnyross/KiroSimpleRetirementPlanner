@@ -5,7 +5,7 @@ This module contains dataclasses that define the primary data structures
 used throughout the retirement planning application.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
 import numpy as np
 
@@ -17,7 +17,13 @@ class UserInput:
     current_savings: float
     monthly_savings: float
     desired_annual_income: float
-    target_success_rate: float = 0.99  # Default to 99%
+    target_success_rate: float = 0.95  # Default to 95% (updated in v1.1.0)
+    
+    # New v1.1.0 features
+    cash_buffer_years: float = 2.0  # Years of spending held in cash
+    state_pension_age: int = 67  # UK state pension age
+    state_pension_amount: float = 9110.0  # Current UK full state pension
+    spending_phases: List[Tuple[int, float]] = field(default_factory=lambda: [(75, 0.75)])  # Age, multiplier
     
     def __post_init__(self):
         """Validate user input data."""
@@ -31,6 +37,21 @@ class UserInput:
             raise ValueError("Desired annual income must be positive")
         if not 0.5 <= self.target_success_rate <= 1.0:
             raise ValueError("Target success rate must be between 50% and 100%")
+        
+        # New v1.1.0 validations
+        if self.cash_buffer_years < 0 or self.cash_buffer_years > 5:
+            raise ValueError("Cash buffer must be between 0 and 5 years")
+        if self.state_pension_age < 60 or self.state_pension_age > 75:
+            raise ValueError("State pension age must be between 60 and 75")
+        if self.state_pension_amount < 0 or self.state_pension_amount > 20000:
+            raise ValueError("State pension amount must be between £0 and £20,000")
+        
+        # Validate spending phases
+        for age, multiplier in self.spending_phases:
+            if age < self.current_age or age > 100:
+                raise ValueError(f"Spending phase age {age} must be between current age and 100")
+            if multiplier < 0.1 or multiplier > 1.0:
+                raise ValueError(f"Spending multiplier {multiplier} must be between 0.1 and 1.0")
 
 
 @dataclass
@@ -138,6 +159,111 @@ class DynamicGlidePath(PortfolioAllocation):
         return equity_pct, bond_pct, cash_pct
 
 
+class RisingGlidePath(PortfolioAllocation):
+    """
+    Rising equity glide path that starts conservative and increases equity over time.
+    
+    Based on Pfau-Kitces research showing this can reduce sequence of returns risk
+    by starting with lower equity allocation at retirement and gradually increasing.
+    """
+    
+    def __init__(self):
+        super().__init__(
+            name="Rising Glide Path (Bond-to-Equity)",
+            equity_percentage=0.3,  # Placeholder - will be calculated dynamically
+            bond_percentage=0.7,    # Placeholder - will be calculated dynamically
+            cash_percentage=0.0,
+            is_dynamic=True
+        )
+    
+    def get_allocation_for_age(self, current_age: int, retirement_age: int) -> Tuple[float, float, float]:
+        """
+        Calculate allocation based on age using a rising glide path.
+        
+        The glide path:
+        - Starts at 30% equity at retirement
+        - Gradually increases to 70% equity by age 85
+        - Maintains 70% equity after age 85
+        
+        Args:
+            current_age: Current age of investor
+            retirement_age: Target retirement age
+            
+        Returns:
+            Tuple of (equity_percentage, bond_percentage, cash_percentage)
+        """
+        if current_age < retirement_age:
+            # Pre-retirement: Use moderate allocation
+            equity_pct = 0.50
+        else:
+            # Post-retirement: Rising equity glide path
+            start_equity = 0.30
+            end_equity = 0.70
+            end_age = 85
+            
+            if current_age >= end_age:
+                equity_pct = end_equity
+            else:
+                years_since_retirement = current_age - retirement_age
+                total_years = end_age - retirement_age
+                if total_years > 0:
+                    progress = min(1.0, years_since_retirement / total_years)
+                    equity_pct = start_equity + (end_equity - start_equity) * progress
+                else:
+                    equity_pct = start_equity
+        
+        # Allocate remaining to bonds (no cash in glide path)
+        bond_pct = 1.0 - equity_pct
+        cash_pct = 0.0
+        
+        return equity_pct, bond_pct, cash_pct
+
+
+class TargetDateFund(PortfolioAllocation):
+    """
+    Target date fund style allocation using the '120 minus age' rule.
+    
+    Simple and widely used allocation strategy that automatically
+    becomes more conservative with age.
+    """
+    
+    def __init__(self):
+        super().__init__(
+            name="Target Date Fund (120-Age)",
+            equity_percentage=0.5,  # Placeholder - will be calculated dynamically
+            bond_percentage=0.5,    # Placeholder - will be calculated dynamically
+            cash_percentage=0.0,
+            is_dynamic=True
+        )
+    
+    def get_allocation_for_age(self, current_age: int, retirement_age: int) -> Tuple[float, float, float]:
+        """
+        Calculate allocation using 120 minus age formula.
+        
+        Formula: Equity % = (120 - current_age) / 100
+        Minimum equity: 20%
+        Maximum equity: 90%
+        
+        Args:
+            current_age: Current age of investor
+            retirement_age: Target retirement age (not used in this strategy)
+            
+        Returns:
+            Tuple of (equity_percentage, bond_percentage, cash_percentage)
+        """
+        # Calculate equity percentage
+        equity_pct = (120 - current_age) / 100
+        
+        # Apply bounds
+        equity_pct = max(0.20, min(0.90, equity_pct))
+        
+        # Allocate remaining to bonds
+        bond_pct = 1.0 - equity_pct
+        cash_pct = 0.0
+        
+        return equity_pct, bond_pct, cash_pct
+
+
 @dataclass
 class SimulationResult:
     """Results from a single Monte Carlo simulation scenario."""
@@ -158,6 +284,14 @@ class GuardRailsThresholds:
     severe_threshold: float = 0.25  # 25% below initial portfolio value
     lower_adjustment: float = 0.10  # 10% spending reduction
     severe_adjustment: float = 0.20  # 20% spending reduction
+    
+    # New v1.1.0: Guyton-Klinger enhancements
+    enable_ratcheting: bool = True  # Allow permanent spending increases
+    ratchet_threshold: float = 0.20  # Trigger ratchet at 20% above initial
+    ratchet_increase: float = 0.10  # 10% permanent spending increase
+    
+    # Dynamic spending strategy selection
+    strategy: str = "guardrails"  # Options: "guardrails", "guyton-klinger", "vanguard"
     
     
 @dataclass
